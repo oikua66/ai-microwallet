@@ -4,6 +4,16 @@ import { useEffect, useRef, useState } from "react";
 
 type Receipt = { orderId: string; captureId: string; amount: string; currency: string; status: string };
 
+const FUNDING_REQUEST_STORAGE_KEY = "paypal-funding-idempotency-key";
+
+function clearStoredRequestKey() {
+  try {
+    window.sessionStorage.removeItem(FUNDING_REQUEST_STORAGE_KEY);
+  } catch {
+    // Storage may be unavailable; the server still applies PayPal request idempotency.
+  }
+}
+
 export default function FundingTest() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -14,6 +24,8 @@ export default function FundingTest() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("paypal") === "cancel") {
       setMessage("Payment cancelled. No successful funding was recorded.");
+      requestKey.current = "";
+      clearStoredRequestKey();
       window.history.replaceState({}, "", "/");
       return;
     }
@@ -31,6 +43,8 @@ export default function FundingTest() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Capture could not be verified.");
       setReceipt(result);
+      requestKey.current = "";
+      clearStoredRequestKey();
     }).catch(error => setMessage(error instanceof Error ? error.message : "Capture could not be verified."))
       .finally(() => setBusy(false));
   }, []);
@@ -39,7 +53,15 @@ export default function FundingTest() {
     setBusy(true);
     setMessage("");
     setReceipt(null);
-    if (!requestKey.current) requestKey.current = crypto.randomUUID();
+    if (!requestKey.current) {
+      try {
+        const savedKey = window.sessionStorage.getItem(FUNDING_REQUEST_STORAGE_KEY);
+        requestKey.current = savedKey && /^[0-9a-f-]{36}$/i.test(savedKey) ? savedKey : crypto.randomUUID();
+        window.sessionStorage.setItem(FUNDING_REQUEST_STORAGE_KEY, requestKey.current);
+      } catch {
+        requestKey.current = crypto.randomUUID();
+      }
+    }
     try {
       const response = await fetch("/api/paypal/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
