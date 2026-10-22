@@ -42,6 +42,10 @@ export default function FundingTest() {
     }).then(async response => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Capture could not be verified.");
+      if (result.status !== "COMPLETED" || typeof result.orderId !== "string" ||
+          typeof result.captureId !== "string" || result.amount !== "5.00" || result.currency !== "USD") {
+        throw new Error("PayPal did not confirm a completed capture. No successful funding is reported.");
+      }
       setReceipt(result);
       requestKey.current = "";
       clearStoredRequestKey();

@@ -56,8 +56,14 @@ export async function POST(request: Request) {
         headers: { "PayPal-Request-Id": `capture-${orderId}` },
         body: "{}",
       });
-      const capture = result.purchase_units?.[0]?.payments?.captures?.[0];
-      if (result.status !== "COMPLETED" || capture?.status !== "COMPLETED" || !capture.id ||
+      const capturedUnits = result.purchase_units;
+      const capture = Array.isArray(capturedUnits) && capturedUnits.length === 1
+        ? capturedUnits[0]?.payments?.captures?.[0]
+        : undefined;
+      if (result.id !== orderId || result.intent !== "CAPTURE" || result.status !== "COMPLETED" ||
+          capturedUnits?.[0]?.amount?.value !== FUNDING_AMOUNT ||
+          capturedUnits?.[0]?.amount?.currency_code !== FUNDING_CURRENCY ||
+          capture?.status !== "COMPLETED" || !capture.id ||
           capture.amount?.value !== FUNDING_AMOUNT || capture.amount?.currency_code !== FUNDING_CURRENCY) {
         throw new Error("PayPal did not confirm a completed capture.");
       }
