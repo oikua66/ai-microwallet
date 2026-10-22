@@ -82,7 +82,7 @@ export default function FundingTest() {
       <p><strong>Funding amount: $5.00 USD</strong></p>
       <p>This flow creates a real PayPal Sandbox transaction. It does not credit an internal MicroWallet balance.</p>
       <button type="button" onClick={startFunding} disabled={busy || !!receipt}>
-        {busy ? "Processing…" : "Add funds with PayPal"}
+        {busy ? "Processing…" : "Add funds with PayPal Sandbox"}
       </button>
       {busy && new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("paypal") === "return" &&
         <p role="status">Verifying the PayPal capture…</p>}

@@ -4,7 +4,7 @@ AI MicroWallet is a PayPal AI Hackathon 2026 project exploring AI-managed micro-
 
 ## Status
 
-Hackathon MVP under active development. The current repository state is the H-001 application scaffold only.
+Hackathon MVP under active development. The current implementation includes the H-003 PayPal Sandbox funding test: a fixed USD 5.00 order, buyer approval, and server-side capture verification. It does not credit an internal MicroWallet balance.
 
 ## Intended stack
 
@@ -73,7 +73,7 @@ cp .env.example .env.local
 
 Never commit real secrets.
 
-The project is designed to use **PayPal Sandbox** during the hackathon. Production PayPal money movement is explicitly outside the MVP scope.
+For the H-003 funding test, configure `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, and `PAYPAL_ENV=sandbox` using PayPal Sandbox credentials. The OAuth exchange and Orders API calls run server-side; the client secret must not be exposed to the browser. The funding amount is fixed at USD 5.00. Production PayPal money movement is explicitly outside the MVP scope.
 
 ## Architecture
 
@@ -113,19 +113,16 @@ Ledger demonstrates aggregation
 
 Deterministic demo digital services, merchants, products or transaction histories may be used where appropriate. They must be clearly identified as demo/simulated data and must never be presented as real external merchants or real PayPal payments unless the corresponding PayPal transaction actually occurred.
 
-## H-001 scope
+## H-003 scope
 
-This scaffold intentionally does **not** implement:
+The funding test intentionally does **not** implement:
 
-- PayPal API calls
-- OpenAI API calls
+- internal wallet balances or a ledger
+- AI or OpenAI API calls
 - Supabase schema
-- wallet balance logic
-- authentication
-- user accounts
-- subscriptions
-- production payments
-- marketplace onboarding
+- authentication or user accounts
+- subscriptions or marketplace onboarding
+- seller payouts or production payments
 
 ## License
 
