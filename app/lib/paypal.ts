@@ -3,7 +3,7 @@ export const FUNDING_CURRENCY = "USD";
 
 export type FundingOrder = {
   orderId: string;
-  capture?: { captureId: string; amount: string; currency: string; status: string };
+  capture?: { orderId: string; captureId: string; amount: string; currency: string; status: string };
   capturePromise?: Promise<FundingOrder["capture"]>;
 };
 

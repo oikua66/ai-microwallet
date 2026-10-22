@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Receipt = { captureId: string; amount: string; currency: string; status: string };
+type Receipt = { orderId: string; captureId: string; amount: string; currency: string; status: string };
 
 export default function FundingTest() {
   const [message, setMessage] = useState("");
@@ -68,7 +68,7 @@ export default function FundingTest() {
       {receipt && <div className="receipt" role="status">
         <h3>Sandbox payment completed</h3>
         <p>Real PayPal Sandbox transaction</p>
-        <p>Order ID: {new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("token") || "Verified"}</p>
+        <p>Order ID: {receipt.orderId}</p>
         <p>Capture ID: {receipt.captureId}</p>
         <p>Amount: {receipt.amount} {receipt.currency}</p>
         <p>Status: {receipt.status}</p>

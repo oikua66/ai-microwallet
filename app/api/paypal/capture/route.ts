@@ -15,8 +15,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const order = orders.get(orderId);
-  if (!order) return NextResponse.json({ error: "This order is unavailable or has already expired. Start again." }, { status: 409 });
+  // PayPal's order ID and request idempotency key are authoritative across server instances.
+  // Keep this map only as a per-instance cache, not as a prerequisite for capture.
+  const order = orders.get(orderId) ?? { orderId };
+  orders.set(orderId, order);
   if (order.capture) return NextResponse.json(order.capture);
   if (!order.capturePromise) {
     order.capturePromise = (async () => {
@@ -31,6 +33,7 @@ export async function POST(request: Request) {
         throw new Error("PayPal did not confirm a completed capture.");
       }
       order.capture = {
+        orderId,
         captureId: capture.id,
         amount: capture.amount.value,
         currency: capture.amount.currency_code,
