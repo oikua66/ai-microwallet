@@ -60,9 +60,7 @@ export async function POST(request: Request) {
       const capture = Array.isArray(capturedUnits) && capturedUnits.length === 1
         ? capturedUnits[0]?.payments?.captures?.[0]
         : undefined;
-      if (result.id !== orderId || result.intent !== "CAPTURE" || result.status !== "COMPLETED" ||
-          capturedUnits?.[0]?.amount?.value !== FUNDING_AMOUNT ||
-          capturedUnits?.[0]?.amount?.currency_code !== FUNDING_CURRENCY ||
+      if (result.id !== orderId || result.status !== "COMPLETED" ||
           capture?.status !== "COMPLETED" || !capture.id ||
           capture.amount?.value !== FUNDING_AMOUNT || capture.amount?.currency_code !== FUNDING_CURRENCY) {
         throw new Error("PayPal did not confirm a completed capture.");
