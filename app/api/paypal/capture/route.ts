@@ -22,6 +22,35 @@ export async function POST(request: Request) {
   if (order.capture) return NextResponse.json(order.capture);
   if (!order.capturePromise) {
     order.capturePromise = (async () => {
+      const orderDetails = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`);
+      const purchaseUnits = orderDetails.purchase_units;
+      if (orderDetails.id !== orderId || orderDetails.intent !== "CAPTURE" || !Array.isArray(purchaseUnits) ||
+          purchaseUnits.length !== 1 || purchaseUnits[0]?.amount?.value !== FUNDING_AMOUNT ||
+          purchaseUnits[0]?.amount?.currency_code !== FUNDING_CURRENCY) {
+        throw new Error("PayPal order does not match the expected funding amount.");
+      }
+
+      if (orderDetails.status === "COMPLETED") {
+        const captures = purchaseUnits[0]?.payments?.captures;
+        const completedCapture = Array.isArray(captures)
+          ? captures.find((item: { id?: string; status?: string; amount?: { value?: string; currency_code?: string } }) =>
+              item.status === "COMPLETED" && item.amount?.value === FUNDING_AMOUNT &&
+              item.amount?.currency_code === FUNDING_CURRENCY)
+          : undefined;
+        if (!completedCapture || typeof completedCapture.id !== "string") {
+          throw new Error("PayPal did not confirm a completed capture.");
+        }
+        order.capture = {
+          orderId,
+          captureId: completedCapture.id,
+          amount: FUNDING_AMOUNT,
+          currency: FUNDING_CURRENCY,
+          status: "COMPLETED",
+        };
+        return order.capture;
+      }
+      if (orderDetails.status !== "APPROVED") throw new Error("PayPal order has not been approved.");
+
       const result = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, {
         method: "POST",
         headers: { "PayPal-Request-Id": `capture-${orderId}` },
