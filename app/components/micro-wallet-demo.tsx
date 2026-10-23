@@ -24,6 +24,7 @@ export default function MicroWalletDemo() {
   const [paypalBusy, setPaypalBusy] = useState(false);
   const [paypalStatus, setPaypalStatus] = useState("");
   const key = useRef("");
+  const paypalOrderKey = useRef("");
   const batchRemaining = useRef(0);
   const batchKey = useRef("");
 
@@ -172,9 +173,10 @@ export default function MicroWalletDemo() {
     setDemoError(current => current?.source === "paypal-order" ? null : current);
     setPaypalStatus("Creating a PayPal Sandbox funding order…");
     try {
+      if (!paypalOrderKey.current) paypalOrderKey.current = crypto.randomUUID();
       const response = await fetch("/api/paypal/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ idempotencyKey: paypalOrderKey.current }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not start PayPal Sandbox funding.");
@@ -197,7 +199,7 @@ export default function MicroWalletDemo() {
       <h2>Buyer MicroWallet</h2>
       <p>Balances and history load from backend state. Demo seed funds are not represented as PayPal-funded.</p>
     </div>
-    {state === null && !error && <p role="status">Loading persistent wallet balances and ledger…</p>}
+    {state === null && !demoError && <p role="status">Loading persistent wallet balances and ledger…</p>}
     <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
     <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
     <p>Seller purchase count: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
@@ -229,7 +231,15 @@ export default function MicroWalletDemo() {
       <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
     </div>}
 
-    {error && <div className="notice" role="alert"><p>{error}</p><button type="button" onClick={retryRefresh} disabled={busy}>Retry wallet history</button></div>}
+    {demoError && <div className="notice" role="alert">
+      <p>{demoError.message}</p>
+      {demoError.source === "history" && <button type="button" onClick={retryRefresh} disabled={busy || paypalBusy}>Retry wallet history</button>}
+      {demoError.source === "purchase" && <button type="button" onClick={pay} disabled={busy}>Retry purchase</button>}
+      {demoError.source === "demo-purchases" && <button type="button" onClick={runDemoPurchases} disabled={busy}>Retry remaining purchases</button>}
+      {demoError.source === "paypal-order" && <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>Retry PayPal setup</button>}
+      {demoError.source === "paypal-capture" && <button type="button" onClick={retryPaypalCapture} disabled={paypalBusy}>Retry PayPal verification</button>}{" "}
+      <button type="button" onClick={() => setDemoError(null)}>Dismiss</button>
+    </div>}
     {receipt && <div className="receipt" role="status">
       <h3>Internal settlement complete</h3>
       <p>Reference: {receipt.reference}{receipt.duplicate ? " (idempotent retry)" : ""}</p>
