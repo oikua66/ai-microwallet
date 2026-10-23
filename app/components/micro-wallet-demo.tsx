@@ -6,6 +6,7 @@ type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
 type Funding = { orderId: string; captureId: string; amountMinor: number; currency: string; createdAt: string };
 type LedgerEntry = { reference: string; productService: string; buyerWalletId: string; sellerWalletId: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string };
+type DemoError = { source: "history" | "purchase" | "demo-purchases" | "paypal-order" | "paypal-capture"; message: string };
 type State = {
   wallets: Wallet[];
   ledger: LedgerEntry[];
@@ -17,11 +18,14 @@ const money = (minor: number, currency = "USD") => `${Math.floor(minor / 100)}.$
 export default function MicroWalletDemo() {
   const [state, setState] = useState<State | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
-  const [error, setError] = useState("");
+  const [demoError, setDemoError] = useState<DemoError | null>(null);
+  const [paypalRetryOrderId, setPaypalRetryOrderId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [paypalBusy, setPaypalBusy] = useState(false);
   const [paypalStatus, setPaypalStatus] = useState("");
   const key = useRef("");
+  const batchRemaining = useRef(0);
+  const batchKey = useRef("");
 
   const refresh = useCallback(async () => {
     const response = await fetch("/api/micro-wallet", { cache: "no-store" });
@@ -54,6 +58,7 @@ export default function MicroWalletDemo() {
         return;
       }
       setPaypalBusy(true);
+      setPaypalRetryOrderId(orderId);
       setPaypalStatus("Verifying PayPal Sandbox capture…");
       try {
         const response = await fetch("/api/paypal/capture", {
@@ -62,23 +67,33 @@ export default function MicroWalletDemo() {
         });
         const capture = await response.json();
         if (!response.ok) throw new Error(capture.error || "PayPal capture could not be verified.");
-        if (active) setPaypalStatus(`PayPal Sandbox funding confirmed: ${capture.amount} ${capture.currency}; capture reference ${capture.captureId}.`);
+        if (active) {
+          setPaypalStatus(`PayPal Sandbox funding confirmed: ${capture.amount} ${capture.currency}; capture reference ${capture.captureId}.`);
+          setPaypalRetryOrderId(null);
+          setDemoError(current => current?.source === "paypal-capture" ? null : current);
+        }
         clearPaypalQuery();
         try { await refresh(); } catch { if (active) setError("Funding was confirmed, but wallet history could not be refreshed."); }
       } catch (reason) {
-        if (active) setPaypalStatus(reason instanceof Error ? reason.message : "PayPal capture could not be verified.");
+        if (active) {
+          const message = reason instanceof Error ? reason.message : "PayPal capture could not be verified.";
+          setPaypalStatus(message);
+          setDemoError({ source: "paypal-capture", message });
+        }
         clearPaypalQuery();
       } finally {
         if (active) setPaypalBusy(false);
       }
     }
-    refresh().catch(reason => { if (active) setError(reason instanceof Error ? reason.message : "Could not load wallet history."); });
+    refresh().catch(reason => { if (active) setDemoError({ source: "history", message: reason instanceof Error ? reason.message : "Could not load wallet history." }); });
     void handlePaypalReturn();
     return () => { active = false; };
   }, [refresh]);
 
   async function pay() {
-    setBusy(true); setError(""); setReceipt(null);
+    setBusy(true);
+    setDemoError(current => current?.source === "purchase" ? null : current);
+    setReceipt(null);
     if (!key.current) key.current = crypto.randomUUID();
     try {
       const response = await fetch("/api/micro-wallet", {
@@ -88,44 +103,74 @@ export default function MicroWalletDemo() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Settlement failed.");
       setReceipt(result); key.current = "";
-      await refresh();
+      try { await refresh(); } catch { setDemoError({ source: "history", message: "Purchase completed, but wallet history couldn’t refresh. Please try again." }); }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Settlement failed.");
+      setDemoError({ source: "purchase", message: reason instanceof Error ? reason.message : "Settlement failed." });
     } finally { setBusy(false); }
   }
 
   async function runDemoPurchases() {
-    setBusy(true); setError(""); setReceipt(null);
-    let completed = 0;
+    setBusy(true);
+    setDemoError(current => current?.source === "demo-purchases" ? null : current);
+    setReceipt(null);
+    if (batchRemaining.current === 0) batchRemaining.current = 3;
     let latest: Receipt | null = null;
     try {
-      for (let index = 0; index < 3; index++) {
+      while (batchRemaining.current > 0) {
+        if (!batchKey.current) batchKey.current = crypto.randomUUID();
         const response = await fetch("/api/micro-wallet", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amountMinor: 20, currency: "USD", idempotencyKey: crypto.randomUUID() }),
+          body: JSON.stringify({ amountMinor: 20, currency: "USD", idempotencyKey: batchKey.current }),
         });
         const result = await response.json();
         if (!response.ok) throw new Error("A purchase couldn’t be completed.");
         latest = result;
-        completed++;
+        batchKey.current = "";
+        batchRemaining.current--;
       }
       if (latest) setReceipt(latest);
-      try { await refresh(); } catch { setError("Three purchases completed, but history couldn’t refresh. Please try again."); }
+      try { await refresh(); } catch { setDemoError({ source: "history", message: "Three purchases completed, but wallet history couldn’t refresh. Please try again." }); }
     } catch {
-      setError(completed
-        ? `${completed} of 3 purchases completed. Refresh wallet history to see the recorded purchases.`
-        : "A purchase couldn’t be completed. Please try again.");
+      const completed = 3 - batchRemaining.current;
+      setDemoError({ source: "demo-purchases", message: completed
+        ? `${completed} of 3 purchases completed. Retry to finish the remaining purchases, or dismiss this message.`
+        : "A purchase couldn’t be completed. Please try again." });
       if (completed) { try { await refresh(); } catch { /* Keep the partial-completion message visible. */ } }
     } finally { setBusy(false); }
   }
 
   async function retryRefresh() {
-    setError("");
-    try { await refresh(); } catch { setError("Wallet history couldn’t load. Please try again."); }
+    setDemoError(current => current?.source === "history" ? null : current);
+    try { await refresh(); } catch { setDemoError({ source: "history", message: "Wallet history couldn’t load. Please try again." }); }
+  }
+
+  async function retryPaypalCapture() {
+    if (!paypalRetryOrderId) return;
+    const orderId = paypalRetryOrderId;
+    setPaypalBusy(true);
+    setDemoError(current => current?.source === "paypal-capture" ? null : current);
+    setPaypalStatus("Verifying PayPal Sandbox capture…");
+    try {
+      const response = await fetch("/api/paypal/capture", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+      const capture = await response.json();
+      if (!response.ok) throw new Error(capture.error || "PayPal capture could not be verified.");
+      setPaypalStatus(`PayPal Sandbox funding confirmed: ${capture.amount} ${capture.currency}; capture reference ${capture.captureId}.`);
+      setPaypalRetryOrderId(null);
+      try { await refresh(); } catch { setDemoError({ source: "history", message: "Funding was confirmed, but wallet history could not be refreshed." }); }
+    } catch (reason) {
+      const message = reason instanceof Error ? reason.message : "PayPal capture could not be verified.";
+      setPaypalStatus(message);
+      setDemoError({ source: "paypal-capture", message });
+    } finally { setPaypalBusy(false); }
   }
 
   async function startPaypalFunding() {
-    setPaypalBusy(true); setError(""); setPaypalStatus("Creating a PayPal Sandbox funding order…");
+    setPaypalBusy(true);
+    setDemoError(current => current?.source === "paypal-order" ? null : current);
+    setPaypalStatus("Creating a PayPal Sandbox funding order…");
     try {
       const response = await fetch("/api/paypal/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -137,7 +182,9 @@ export default function MicroWalletDemo() {
       setPaypalStatus("Continue to PayPal Sandbox to approve the real funding transaction.");
       window.location.assign(result.approvalUrl);
     } catch (reason) {
-      setPaypalStatus(reason instanceof Error ? reason.message : "Could not start PayPal Sandbox funding.");
+      const message = reason instanceof Error ? reason.message : "Could not start PayPal Sandbox funding.";
+      setPaypalStatus(message);
+      setDemoError({ source: "paypal-order", message });
       setPaypalBusy(false);
     }
   }
