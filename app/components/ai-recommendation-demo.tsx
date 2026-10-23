@@ -3,28 +3,30 @@
 import { useState } from "react";
 
 const transactions = [
-  { merchant: "Cloud storage", amountMinor: 99, currency: "USD", type: "purchase" },
-  { merchant: "Cloud storage", amountMinor: 99, currency: "USD", type: "purchase" },
-  { merchant: "Cloud storage", amountMinor: 99, currency: "USD", type: "purchase" },
-  { merchant: "Seller earnings", amountMinor: 500, currency: "USD", type: "earning" },
+  { merchant: "Digital service A", amountMinor: 35, currency: "USD", type: "purchase" },
+  { merchant: "Digital service B", amountMinor: 20, currency: "USD", type: "purchase" },
+  { merchant: "Translation", amountMinor: 45, currency: "USD", type: "purchase" },
+  { merchant: "API call", amountMinor: 30, currency: "USD", type: "purchase" },
+  { merchant: "Content", amountMinor: 15, currency: "USD", type: "purchase" },
 ] as const;
 
 type Result = {
-  recommendAggregation: boolean;
+  recommend_microwallet: boolean;
+  matching_transactions: number;
+  recommended_topup: number;
+  recommended_topup_minor: number;
   reason: string;
-  recommendedAmountMinor: number;
-  confidence: number;
-  strength: string;
   evidence: {
-    transactionCount: number;
-    totalSpendMinor: number;
-    totalEarningsMinor: number;
-    repeatedMerchants: Array<{ merchant: string; transactionCount: number; totalSpendMinor: number }>;
-    frictionRationale: string;
+    matching_spend: number;
+    matching_spend_minor: number;
+    micro_purchase_limit: number;
+    topup_bounds: { min: number; max: number } | null;
   };
-  adviceOnly: true;
+  advice_only: true;
 };
-const money = (minor: number) => `${(minor / 100).toFixed(2)} USD`;
+
+const money = (amount: number) => `${amount.toFixed(2)} USD`;
+const minorMoney = (minor: number) => money(minor / 100);
 
 export default function AIRecommendationDemo() {
   const [result, setResult] = useState<Result | null>(null);
@@ -51,22 +53,21 @@ export default function AIRecommendationDemo() {
     }
   }
 
-  return <section aria-label="AI aggregation advice">
-    <h3>AI aggregation advice — recommendation only</h3>
-    <p>Sample transaction history (USD):</p>
-    <ul>{transactions.map((item, index) => <li key={index}>{item.type}: {item.merchant} — {money(item.amountMinor)}</li>)}</ul>
+  return <section aria-label="AI MicroWallet opportunity">
+    <h3>AI MicroWallet opportunity — recommendation only</h3>
+    <p>Canonical demo history:</p>
+    <ul>{transactions.map((item, index) => <li key={index}>{item.merchant} — {minorMoney(item.amountMinor)}</li>)}</ul>
     <button type="button" onClick={analyze} disabled={busy}>{busy ? "Analyzing…" : "Analyze with AI"}</button>
-    <p>This is advice only. It does not change balances, write a ledger entry, or initiate a payment.</p>
+    <p>AI can recommend only. Deterministic code validates counts and top-up bounds. No balance or PayPal action is performed here.</p>
     {error && <p className="notice" role="alert">{error}</p>}
     {result && <div className="receipt" role="status">
-      <h4>{result.recommendAggregation ? "Aggregation may make sense" : "Aggregation is not recommended"}</h4>
+      <h4>{result.recommend_microwallet ? "MicroWallet opportunity detected" : "No MicroWallet opportunity detected"}</h4>
       <p>{result.reason}</p>
-      <p>Suggested aggregation amount: {money(result.recommendedAmountMinor)} (suggestion only)</p>
-      <p>Confidence: {result.strength} ({Math.round(result.confidence * 100)}%)</p>
-      <p>Evidence: {result.evidence.transactionCount} transactions; {money(result.evidence.totalSpendMinor)} purchase spend; {money(result.evidence.totalEarningsMinor)} seller earnings.</p>
-      {result.evidence.repeatedMerchants.map(item => <p key={item.merchant}>Repeated merchant: {item.merchant}, {item.transactionCount} purchases, {money(item.totalSpendMinor)} total.</p>)}
-      <p>{result.evidence.frictionRationale}</p>
-      <strong>Advice only — no payment was executed.</strong>
+      <p>Matching low-value transactions: {result.matching_transactions}</p>
+      <p>Matching spend: {money(result.evidence.matching_spend)}</p>
+      <p>Recommended top-up: {money(result.recommended_topup)} (suggestion only)</p>
+      {result.evidence.topup_bounds && <p>Deterministic allowed range: {money(result.evidence.topup_bounds.min)}–{money(result.evidence.topup_bounds.max)}</p>}
+      <strong>Advice only — no payment, top-up, transfer, ledger entry, or balance change was executed.</strong>
     </div>}
   </section>;
 }
