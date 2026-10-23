@@ -84,7 +84,22 @@ begin
     raise exception 'Buyer and seller must be distinct wallets';
   end if;
 
-  -- Acquire locks in stable order so concurrent purchases cannot overspend or deadlock.
+  -- Serialize retries by key, even when requests target different wallet pairs.
+  perform pg_advisory_xact_lock(hashtextextended(p_idempotency_key, 0));
+  select * into prior from public.micro_wallet_transactions where idempotency_key = p_idempotency_key;
+  if found then
+    if prior.buyer_wallet_id <> p_buyer_wallet_id or prior.seller_wallet_id <> p_seller_wallet_id
+       or prior.amount_minor <> p_amount_minor or prior.currency <> p_currency then
+      raise exception 'Idempotency key was already used for a different settlement';
+    end if;
+    return jsonb_build_object(
+      'reference', prior.id, 'amountMinor', prior.amount_minor, 'currency', prior.currency,
+      'buyerBalanceMinor', prior.buyer_balance_after, 'sellerBalanceMinor', prior.seller_balance_after,
+      'createdAt', prior.created_at, 'duplicate', true
+    );
+  end if;
+
+  -- Acquire wallet locks in stable order so concurrent purchases cannot overspend or deadlock.
   perform id from public.micro_wallets
    where id in (p_buyer_wallet_id, p_seller_wallet_id)
    order by id for update;

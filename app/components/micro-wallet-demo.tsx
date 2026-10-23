@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number };
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
 type State = { wallets: Wallet[]; ledger: Array<{ reference: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string }> };
-const money = (minor: number, currency = "USD") => `${(minor / 100).toFixed(2)} ${currency}`;
+const money = (minor: number, currency = "USD") => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, "0")} ${currency}`;
 
 export default function MicroWalletDemo() {
   const [state, setState] = useState<State | null>(null);

@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "";
     const known = ["Insufficient balance", "Unknown wallet", "Unsupported currency", "Wallet currency mismatch",
       "Invalid wallet roles", "Buyer and seller must be distinct wallets", "Idempotency key was already used for a different settlement",
-      "Amount must be a positive integer minor-unit value"];
+      "Amount must be a positive integer minor-unit value", "Balance limit exceeded", "Invalid idempotency key"];
     if (known.some(item => message.includes(item))) {
       return NextResponse.json({ error: known.find(item => message.includes(item)) }, { status: 409 });
     }
