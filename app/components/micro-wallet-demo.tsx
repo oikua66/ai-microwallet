@@ -13,6 +13,8 @@ export default function MicroWalletDemo() {
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [paypalBusy, setPaypalBusy] = useState(false);
+  const [paypalStatus, setPaypalStatus] = useState("");
   const key = useRef("");
 
   const refresh = useCallback(async () => {
@@ -22,7 +24,52 @@ export default function MicroWalletDemo() {
     setState(result);
   }, []);
 
-  useEffect(() => { refresh().catch(reason => setError(reason instanceof Error ? reason.message : "Could not load wallet history.")); }, [refresh]);
+  useEffect(() => {
+    let active = true;
+    const clearPaypalQuery = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("paypal");
+      url.searchParams.delete("token");
+      window.history.replaceState({}, "", url);
+    };
+    async function handlePaypalReturn() {
+      const url = new URL(window.location.href);
+      const result = url.searchParams.get("paypal");
+      if (result === "cancel") {
+        setPaypalStatus("PayPal Sandbox funding was cancelled; no funding is reported.");
+        clearPaypalQuery();
+        return;
+      }
+      if (result !== "return") return;
+      const orderId = url.searchParams.get("token");
+      if (!orderId) {
+        setPaypalStatus("PayPal returned without an order reference. Funding was not confirmed.");
+        clearPaypalQuery();
+        return;
+      }
+      setPaypalBusy(true);
+      setPaypalStatus("Verifying PayPal Sandbox capture…");
+      try {
+        const response = await fetch("/api/paypal/capture", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId }),
+        });
+        const capture = await response.json();
+        if (!response.ok) throw new Error(capture.error || "PayPal capture could not be verified.");
+        if (active) setPaypalStatus(`PayPal Sandbox funding confirmed: ${capture.amount} ${capture.currency}; capture reference ${capture.captureId}.`);
+        clearPaypalQuery();
+        try { await refresh(); } catch { if (active) setError("Funding was confirmed, but wallet history could not be refreshed."); }
+      } catch (reason) {
+        if (active) setPaypalStatus(reason instanceof Error ? reason.message : "PayPal capture could not be verified.");
+        clearPaypalQuery();
+      } finally {
+        if (active) setPaypalBusy(false);
+      }
+    }
+    refresh().catch(reason => { if (active) setError(reason instanceof Error ? reason.message : "Could not load wallet history."); });
+    void handlePaypalReturn();
+    return () => { active = false; };
+  }, [refresh]);
 
   async function pay() {
     setBusy(true); setError(""); setReceipt(null);
@@ -41,24 +88,52 @@ export default function MicroWalletDemo() {
     } finally { setBusy(false); }
   }
 
+  async function startPaypalFunding() {
+    setPaypalBusy(true); setError(""); setPaypalStatus("Creating a PayPal Sandbox funding order…");
+    try {
+      const response = await fetch("/api/paypal/orders", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idempotencyKey: crypto.randomUUID() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not start PayPal Sandbox funding.");
+      if (typeof result.approvalUrl !== "string") throw new Error("PayPal did not provide an approval link.");
+      setPaypalStatus("Continue to PayPal Sandbox to approve the real funding transaction.");
+      window.location.assign(result.approvalUrl);
+    } catch (reason) {
+      setPaypalStatus(reason instanceof Error ? reason.message : "Could not start PayPal Sandbox funding.");
+      setPaypalBusy(false);
+    }
+  }
+
   const buyer = state?.wallets.find(wallet => wallet.role === "buyer");
   const seller = state?.wallets.find(wallet => wallet.role === "seller");
   return <section className="funding">
     <h2>Internal MicroWallet demo</h2>
     <p>Demo seed only; this balance is not represented as PayPal-funded.</p>
+    {state === null && !error && <p role="status">Loading persistent wallet balances and ledger…</p>}
     <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
-    <p>Seller pending balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
+    <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
+    <p>Withdrawal request: Not requested. No PayPal payout is executed or claimed.</p>
+    <div className="funding">
+      <h3>PayPal Sandbox top-up</h3>
+      <p>Approve a real Sandbox funding transaction; this is separate from internal micro-purchases.</p>
+      <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "Top up with PayPal"}</button>
+      {paypalStatus && <p role="status">{paypalStatus}</p>}
+    </div>
     {state?.summary && <div className="settlement-summary" aria-label="Settlement summary">
       <h3>Settlement summary</h3>
-      <p>Internal micro-purchases: {state.summary.micro_purchase_count}</p>
-      <p>Real PayPal funding transactions: {state.summary.real_paypal_payment_count}</p>
+      <p>Internal micro-purchases (N): {state.summary.micro_purchase_count}</p>
+      <p>Real PayPal funding transactions (M): {state.summary.real_paypal_payment_count}</p>
+      <p>{state.summary.micro_purchase_count > state.summary.real_paypal_payment_count ? "N > M: multiple internal purchases are aggregated without a PayPal transaction per purchase." : "PayPal transactions fund the wallet; internal purchases do not create separate PayPal transactions."}</p>
       <p>Internal volume: {state.summary.internal_volume.toFixed(2)} USD</p>
       <p>Average micro-purchase: {state.summary.average_micro_purchase.toFixed(2)} USD</p>
       <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
     </div>}
-    <p>Micro-purchase: <strong>0.20 USD</strong></p>
+    <p>Merchant checkout — demo micro-purchase: <strong>0.20 USD</strong></p>
     <AIRecommendationDemo />
     <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>
+    <p>MicroWallet checkout is deterministic internal settlement. PayPal is the separate funding alternative above.</p>
     {error && <p className="notice" role="alert">{error}</p>}
     {receipt && <div className="receipt" role="status">
       <h3>Internal settlement complete</h3>
@@ -70,7 +145,7 @@ export default function MicroWalletDemo() {
     </div>}
     <h3>Ledger history</h3>
     {state?.ledger.length ? <ol>{state.ledger.map(entry => <li key={entry.reference}>
-      {entry.reference} — {money(entry.amountMinor, entry.currency)}; buyer {money(entry.buyerBalanceAfter)}, seller {money(entry.sellerBalanceAfter)}
-    </li>)}</ol> : <p>No internal settlements recorded.</p>}
+      <strong>Demo micro-purchase</strong> — reference {entry.reference}; {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}
+    </li>)}</ol> : <p>{state ? "No internal settlements recorded yet. Complete a MicroWallet checkout to create the first ledger entry." : "Ledger is unavailable until wallet history loads."}</p>
   </section>;
 }
