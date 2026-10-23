@@ -96,6 +96,10 @@ export function deriveOpportunityEvidence(historyValue: unknown) {
   };
 }
 
+function formatMinorAmount(amountMinor: number) {
+  return `${Math.floor(amountMinor / 100)}.${String(amountMinor % 100).padStart(2, "0")}`;
+}
+
 export function validateOpportunityRecommendation(historyValue: unknown, output: unknown) {
   const evidence = deriveOpportunityEvidence(historyValue);
   if (!output || typeof output !== "object" || Array.isArray(output)) throw new Error("Invalid opportunity recommendation.");
@@ -124,7 +128,9 @@ export function validateOpportunityRecommendation(historyValue: unknown, output:
     matching_transactions: evidence.matchingTransactions,
     recommended_topup: recommend ? requestedTopup / 100 : 0,
     recommended_topup_minor: recommend ? requestedTopup : 0,
-    reason: result.reason.trim(),
+    reason: evidence.hasOpportunity
+      ? `${evidence.matchingTransactions} low-value transactions totaling ${formatMinorAmount(evidence.matchingSpendMinor)} support a MicroWallet opportunity.`
+      : `${evidence.matchingTransactions} low-value transactions totaling ${formatMinorAmount(evidence.matchingSpendMinor)}; at least 3 are needed to identify an opportunity.`,
     evidence: {
       matching_spend: evidence.matchingSpendMinor / 100,
       matching_spend_minor: evidence.matchingSpendMinor,

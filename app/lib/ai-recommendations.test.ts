@@ -48,6 +48,16 @@ test("H-005 canonical opportunity is grounded and exposes bounded top-up", () =>
   equal(result.advice_only, true);
 });
 
+test("H-005 unsupported AI claims are never returned as explanations", () => {
+  const result = validateOpportunityRecommendation(opportunityHistory, {
+    recommend_microwallet: true,
+    matching_transactions: 5,
+    recommended_topup_minor: 500,
+    reason: "Your account has $1,000 available and the provider approved a transfer.",
+  });
+  equal(result.reason, "5 low-value transactions totaling $1.45 support a MicroWallet opportunity.");
+});
+
 test("H-005 malformed, ungrounded, and out-of-bounds AI output fails closed", () => {
   throws(() => validateOpportunityRecommendation(opportunityHistory, {
     recommend_microwallet: "yes",
