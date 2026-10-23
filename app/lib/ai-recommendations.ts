@@ -78,3 +78,59 @@ export function validateRecommendation(historyValue: unknown, output: unknown) {
     adviceOnly: true as const,
   };
 }
+
+const OPPORTUNITY_TOPUP_MIN_MINOR = 500;
+const OPPORTUNITY_TOPUP_MAX_MINOR = 2_000;
+const MICRO_PURCHASE_MAX_MINOR = 200;
+
+export function deriveOpportunityEvidence(historyValue: unknown) {
+  const history = validateHistory(historyValue);
+  const purchases = history.filter(item => item.type === "purchase");
+  const matching = purchases.filter(item => item.amountMinor <= MICRO_PURCHASE_MAX_MINOR);
+  const matchingSpendMinor = matching.reduce((sum, item) => sum + item.amountMinor, 0);
+  return {
+    history,
+    matchingTransactions: matching.length,
+    matchingSpendMinor,
+    hasOpportunity: matching.length >= 3,
+  };
+}
+
+export function validateOpportunityRecommendation(historyValue: unknown, output: unknown) {
+  const evidence = deriveOpportunityEvidence(historyValue);
+  if (!output || typeof output !== "object" || Array.isArray(output)) throw new Error("Invalid opportunity recommendation.");
+  const result = output as Record<string, unknown>;
+  const keys = ["recommend_microwallet", "matching_transactions", "recommended_topup_minor", "reason"];
+  if (Object.keys(result).length !== keys.length || !keys.every(key => key in result) ||
+      typeof result.recommend_microwallet !== "boolean" ||
+      !Number.isSafeInteger(result.matching_transactions) ||
+      !Number.isSafeInteger(result.recommended_topup_minor) ||
+      typeof result.reason !== "string" || result.reason.trim().length < 1 || result.reason.length > 240 ||
+      /(execute|payment completed|pay now|transfer funds|send money|guaranteed savings|\b(?:i|we|microwallet|the system)\s+(?:have\s+)?(?:paid|sent|transferred|initiated|executed)\b)/i.test(result.reason)) {
+    throw new Error("Invalid opportunity recommendation.");
+  }
+  if (result.matching_transactions !== evidence.matchingTransactions) {
+    throw new Error("AI matching count is not grounded in supplied history.");
+  }
+  const recommend = result.recommend_microwallet as boolean;
+  const requestedTopup = result.recommended_topup_minor as number;
+  if (recommend !== evidence.hasOpportunity) throw new Error("AI recommendation is not grounded in supplied history.");
+  if (!recommend && requestedTopup !== 0) throw new Error("Top-up must be zero when MicroWallet is not recommended.");
+  if (recommend && (requestedTopup < OPPORTUNITY_TOPUP_MIN_MINOR || requestedTopup > OPPORTUNITY_TOPUP_MAX_MINOR)) {
+    throw new Error("Suggested top-up is outside deterministic bounds.");
+  }
+  return {
+    recommend_microwallet: recommend,
+    matching_transactions: evidence.matchingTransactions,
+    recommended_topup: recommend ? requestedTopup / 100 : 0,
+    recommended_topup_minor: recommend ? requestedTopup : 0,
+    reason: result.reason.trim(),
+    evidence: {
+      matching_spend: evidence.matchingSpendMinor / 100,
+      matching_spend_minor: evidence.matchingSpendMinor,
+      micro_purchase_limit: MICRO_PURCHASE_MAX_MINOR / 100,
+      topup_bounds: recommend ? { min: OPPORTUNITY_TOPUP_MIN_MINOR / 100, max: OPPORTUNITY_TOPUP_MAX_MINOR / 100 } : null,
+    },
+    advice_only: true as const,
+  };
+}
