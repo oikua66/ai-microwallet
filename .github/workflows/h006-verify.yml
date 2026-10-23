@@ -1,0 +1,39 @@
+name: H006 Verify
+
+on:
+  push:
+    branches:
+      - verify/h006-a002
+
+jobs:
+  verify-sql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare Supabase placeholder roles
+        run: |
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          create role anon;
+          create role authenticated;
+          create role service_role;
+          SQL
+      - name: Apply H-002 baseline
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/202606100001_h002_internal_microwallet.sql
+      - name: Apply H-006 migration
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/202606110001_h006_settlement_summary.sql
+      - name: Run H-006 focused SQL test
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/h006_settlement_summary.sql
