@@ -30,7 +30,7 @@ export default function MicroWalletDemo() {
     try {
       const response = await fetch("/api/micro-wallet", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountMinor: 25, currency: "USD", idempotencyKey: key.current }),
+        body: JSON.stringify({ amountMinor: 20, currency: "USD", idempotencyKey: key.current }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Settlement failed.");
@@ -56,7 +56,7 @@ export default function MicroWalletDemo() {
       <p>Average micro-purchase: {state.summary.average_micro_purchase.toFixed(2)} USD</p>
       <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
     </div>}
-    <p>Micro-purchase: <strong>0.25 USD</strong></p>
+    <p>Micro-purchase: <strong>0.20 USD</strong></p>
     <AIRecommendationDemo />
     <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>
     {error && <p className="notice" role="alert">{error}</p>}
