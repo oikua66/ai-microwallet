@@ -48,6 +48,28 @@ begin
   end loop;
 
   state_after := public.micro_wallet_demo_state();
+  if not exists (
+       select 1 from jsonb_array_elements(state_after->'ledger') entry
+        where entry->>'reference' = (
+          select t.id::text from public.micro_wallet_transactions t
+           where t.buyer_wallet_id = buyer_id and t.seller_wallet_id = seller_id
+           order by t.created_at desc limit 1
+        )
+          and entry ? 'amountMinor' and entry ? 'currency'
+          and entry ? 'buyerBalanceAfter' and entry ? 'sellerBalanceAfter'
+          and entry ? 'createdAt'
+     ) then
+    raise exception 'Demo state ledger is missing purchase, balance, or timestamp fields';
+  end if;
+  if not exists (
+       select 1 from jsonb_array_elements(state_after->'fundings') funding
+        where funding->>'orderId' = order_ref
+          and funding->>'captureId' = capture_ref
+          and funding ? 'amountMinor' and funding ? 'currency'
+          and funding ? 'createdAt'
+     ) then
+    raise exception 'Demo state is missing the recorded PayPal funding references';
+  end if;
   if (state_after#>>'{summary,micro_purchase_count}')::bigint < tx_count_before + 3
      or (state_after#>>'{summary,real_paypal_payment_count}')::bigint <
         (state_before#>>'{summary,real_paypal_payment_count}')::bigint + 1

@@ -53,12 +53,15 @@ export default function AIRecommendationDemo() {
     }
   }
 
-  return <section aria-label="AI MicroWallet opportunity">
-    <h3>AI MicroWallet opportunity — recommendation only</h3>
-    <p>Canonical demo history:</p>
+  return <section className="stage advice-stage" id="opportunity" aria-label="AI MicroWallet opportunity">
+    <p className="stage-label">Step 1 · AI advice only</p>
+    <h2>Spot the low-value payment pattern</h2>
+    <p>Demo evidence: five repeated purchases from digital services, totaling 1.45 USD (0.15–0.45 USD each). Ask AI to assess whether aggregation is useful; deterministic policy and wallet code remain in control.</p>
+    <details><summary>Show the sample transaction history</summary>
     <ul>{transactions.map((item, index) => <li key={index}>{item.merchant} — {minorMoney(item.amountMinor)}</li>)}</ul>
-    <button type="button" onClick={analyze} disabled={busy}>{busy ? "Analyzing…" : "Analyze with AI"}</button>
-    <p>AI can recommend only. Deterministic code validates counts and top-up bounds. No balance or PayPal action is performed here.</p>
+    </details>
+    <button type="button" onClick={analyze} disabled={busy}>{busy ? "Analyzing…" : "Analyze payment pattern"}</button>
+    <p>AI recommendation is advice only. Deterministic code validates matching counts and allowed top-up bounds. This step does not change a balance or move PayPal funds.</p>
     {error && <p className="notice" role="alert">{error}</p>}
     {result && <div className="receipt" role="status">
       <h4>{result.recommend_microwallet ? "MicroWallet opportunity detected" : "No MicroWallet opportunity detected"}</h4>

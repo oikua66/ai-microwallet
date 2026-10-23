@@ -5,12 +5,24 @@ export default function Home() {
   return (
     <main className="shell">
       <section className="card">
-        <p className="eyebrow">PayPal AI Hackathon 2026</p>
+        <p className="eyebrow">PayPal AI Hackathon 2026 · Product demo</p>
         <h1>AI MicroWallet</h1>
-        <p className="lead">Deterministic internal micro-purchases with integer-cent balances and inspectable ledger history.</p>
-        <MicroWalletDemo />
+        <p className="lead">Turn repeated low-value purchases into a clear, auditable wallet journey.</p>
+        <nav className="journey-nav" aria-label="Demo journey">
+          <a href="#opportunity">1. AI opportunity</a>
+          <a href="#wallet">2. Buyer wallet</a>
+          <a href="#checkout">3. Merchant checkout</a>
+          <a href="#seller">4. Seller & ledger</a>
+          <a href="#aggregation">5. Aggregation</a>
+        </nav>
+        <div className="journey-key" aria-label="Action types">
+          <span><strong>AI advice</strong> — recommendation only</span>
+          <span><strong>Internal settlement</strong> — deterministic wallet ledger</span>
+          <span><strong>PayPal Sandbox</strong> — real external funding, when approved</span>
+        </div>
         <AIRecommendationDemo />
-        <p className="status">AI finds where aggregation makes sense. MicroWallet settles the micro-purchases. PayPal moves the real money.</p>
+        <MicroWalletDemo />
+        <p className="status">AI recommends. Code controls balances. PayPal moves money.</p>
       </section>
     </main>
   );
