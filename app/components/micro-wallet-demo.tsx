@@ -74,7 +74,7 @@ export default function MicroWalletDemo() {
           setDemoError(current => current?.source === "paypal-capture" ? null : current);
         }
         clearPaypalQuery();
-        try { await refresh(); } catch { if (active) setError("Funding was confirmed, but wallet history could not be refreshed."); }
+        try { await refresh(); } catch { if (active) setDemoError({ source: "history", message: "Funding was confirmed, but wallet history could not be refreshed." }); }
       } catch (reason) {
         if (active) {
           const message = reason instanceof Error ? reason.message : "PayPal capture could not be verified.";
