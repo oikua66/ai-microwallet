@@ -48,6 +48,17 @@ test("H-005 canonical opportunity is grounded and exposes bounded top-up", () =>
   equal(result.advice_only, true);
 });
 
+test("H-005 top-up suggestion stays deterministic within the allowed AI range", () => {
+  const result = validateOpportunityRecommendation(opportunityHistory, {
+    recommend_microwallet: true,
+    matching_transactions: 5,
+    recommended_topup_minor: 2000,
+    reason: "Repeated low-value payments detected.",
+  });
+  equal(result.recommended_topup, 5);
+  equal(result.recommended_topup_minor, 500);
+});
+
 test("H-005 unsupported AI claims are never returned as explanations", () => {
   const result = validateOpportunityRecommendation(opportunityHistory, {
     recommend_microwallet: true,

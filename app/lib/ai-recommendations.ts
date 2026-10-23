@@ -126,8 +126,8 @@ export function validateOpportunityRecommendation(historyValue: unknown, output:
   return {
     recommend_microwallet: recommend,
     matching_transactions: evidence.matchingTransactions,
-    recommended_topup: recommend ? requestedTopup / 100 : 0,
-    recommended_topup_minor: recommend ? requestedTopup : 0,
+    recommended_topup: recommend ? OPPORTUNITY_TOPUP_MIN_MINOR / 100 : 0,
+    recommended_topup_minor: recommend ? OPPORTUNITY_TOPUP_MIN_MINOR : 0,
     reason: evidence.hasOpportunity
       ? `${evidence.matchingTransactions} low-value transactions totaling ${formatMinorAmount(evidence.matchingSpendMinor)} support a MicroWallet opportunity.`
       : `${evidence.matchingTransactions} low-value transactions totaling ${formatMinorAmount(evidence.matchingSpendMinor)}; at least 3 are needed to identify an opportunity.`,
