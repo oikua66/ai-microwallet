@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import AIRecommendationDemo from "@/app/components/ai-recommendation-demo";
 
 type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number };
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
@@ -48,6 +49,7 @@ export default function MicroWalletDemo() {
     <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
     <p>Seller balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
     <p>Micro-purchase: <strong>0.25 USD</strong></p>
+    <AIRecommendationDemo />
     <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>
     {error && <p className="notice" role="alert">{error}</p>}
     {receipt && <div className="receipt" role="status">
