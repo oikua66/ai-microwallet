@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import AIRecommendationDemo from "@/app/components/ai-recommendation-demo";
 
 type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number };
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
@@ -123,8 +122,6 @@ export default function MicroWalletDemo() {
     <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
     <p>Seller purchase count: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
     <p>Seller settlement state: Accumulating internal credits. Withdrawal request: Not requested. No PayPal payout is executed or claimed.</p>
-
-    <AIRecommendationDemo />
 
     <div className="funding">
       <h3>Merchant checkout</h3>

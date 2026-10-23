@@ -8,8 +8,8 @@ export default function Home() {
         <p className="eyebrow">PayPal AI Hackathon 2026</p>
         <h1>AI MicroWallet</h1>
         <p className="lead">Deterministic internal micro-purchases with integer-cent balances and inspectable ledger history.</p>
-        <MicroWalletDemo />
         <AIRecommendationDemo />
+        <MicroWalletDemo />
         <p className="status">AI finds where aggregation makes sense. MicroWallet settles the micro-purchases. PayPal moves the real money.</p>
       </section>
     </main>
