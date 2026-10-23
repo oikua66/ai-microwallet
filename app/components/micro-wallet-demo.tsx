@@ -115,6 +115,7 @@ export default function MicroWalletDemo() {
   const buyer = state?.wallets.find(wallet => wallet.role === "buyer");
   const seller = state?.wallets.find(wallet => wallet.role === "seller");
   return <section className="stage wallet-stage" aria-label="Buyer and seller MicroWallet">
+    <p>Fresh-session demo: check the buyer balance, add funds with PayPal Sandbox only if needed, then complete several 0.20 USD MicroWallet purchases. Internal purchases settle without a separate PayPal transaction.</p>
     <div id="wallet">
       <p className="stage-label">Step 2 · Persistent buyer wallet</p>
       <h2>Buyer MicroWallet</h2>
@@ -151,7 +152,7 @@ export default function MicroWalletDemo() {
       <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
     </div>}
 
-    {error && <p className="notice" role="alert">{error}</p>}
+    {error && <div className="notice" role="alert"><p>{error}</p><button type="button" onClick={() => { setError(""); refresh().catch(reason => setError(reason instanceof Error ? reason.message : "Could not load wallet history.")); }}>Retry loading wallet history</button></div>}
     {receipt && <div className="receipt" role="status">
       <h3>Internal settlement complete</h3>
       <p>Reference: {receipt.reference}{receipt.duplicate ? " (idempotent retry)" : ""}</p>

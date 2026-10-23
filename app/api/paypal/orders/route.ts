@@ -43,9 +43,6 @@ export async function POST(request: NextRequest) {
   try {
     return NextResponse.json(await operation);
   } catch (error) {
-    const message = error instanceof Error && error.message === "PayPal Sandbox is not configured."
-      ? error.message
-      : "Could not create a PayPal Sandbox order. Please try again.";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return NextResponse.json({ error: "Could not start PayPal Sandbox funding. Please try again." }, { status: 502 });
   }
 }

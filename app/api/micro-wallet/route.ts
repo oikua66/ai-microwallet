@@ -37,7 +37,7 @@ export async function GET() {
     }
     return NextResponse.json(state, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "MicroWallet history is unavailable. Check server-side Supabase configuration and migration." }, { status: 503 });
+    return NextResponse.json({ error: "Wallet history is temporarily unavailable. Please try again." }, { status: 503 });
   }
 }
 
