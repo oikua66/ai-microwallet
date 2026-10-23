@@ -9,3 +9,11 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 72px); line-height: 0.95; }
 .principles { border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 16px 0; line-height: 1.6; }
 .principles p { margin: 6px 0; }
 .status { margin: 20px 0 0; font-size: 14px; color: #6b7280; }
+.funding { margin-top: 24px; padding: 20px 0; border-top: 1px solid #e5e7eb; line-height: 1.6; }
+.funding h2 { margin-top: 0; }
+.funding button { border: 0; border-radius: 8px; padding: 12px 18px; color: #fff; background: #1346a8; font-size: 16px; font-weight: 700; cursor: pointer; }
+.funding button:disabled { opacity: .6; cursor: wait; }
+.notice { color: #9b1c1c; }
+.receipt { margin-top: 20px; padding: 16px; border: 1px solid #15803d; border-radius: 10px; background: #f0fdf4; overflow-wrap: anywhere; }
+.receipt h3 { margin-top: 0; }
+.receipt p { margin: 8px 0; }
