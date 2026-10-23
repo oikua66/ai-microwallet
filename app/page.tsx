@@ -8,6 +8,7 @@ export default function Home() {
         <p className="eyebrow">PayPal AI Hackathon 2026 · Product demo</p>
         <h1>AI MicroWallet</h1>
         <p className="lead">Turn repeated low-value purchases into a clear, auditable wallet journey.</p>
+        <p>New to the demo? Follow the numbered steps, then run three internal purchases to compare N and M. PayPal Sandbox is optional when you want to show external wallet funding.</p>
         <nav className="journey-nav" aria-label="Demo journey">
           <a href="#opportunity">1. AI opportunity</a>
           <a href="#wallet">2. Buyer wallet</a>
