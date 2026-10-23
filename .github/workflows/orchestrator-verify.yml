@@ -1,5 +1,5 @@
 name: Orchestrator Verify
-run-name: orchestrator-verify:${{ inputs.task_code }}:${{ inputs.target_sha }}
+run-name: Orchestrator Verify
 
 on:
   workflow_dispatch:
@@ -12,6 +12,13 @@ on:
         description: Orchestrator task code
         required: true
         type: string
+  push:
+    branches:
+      - 'orchestrator-verifier/**'
+
+permissions:
+  contents: read
+  statuses: write
 
 jobs:
   verify:
@@ -32,14 +39,48 @@ jobs:
           --health-retries=10
     env:
       PGPASSWORD: postgres
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPOSITORY: ${{ github.repository }}
+
     steps:
+      - name: Read verifier request branch
+        uses: actions/checkout@v4
+        with:
+          path: .request
+
+      - name: Resolve exact verification target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            target_sha="${{ inputs.target_sha }}"
+            task_code="${{ inputs.task_code }}"
+          else
+            target_sha="$(jq -r '.target_sha // empty' .request/.orchestrator/verify-request.json)"
+            task_code="$(jq -r '.task_code // empty' .request/.orchestrator/verify-request.json)"
+          fi
+          test -n "$target_sha"
+          test -n "$task_code"
+          echo "TARGET_SHA=$target_sha" >> "$GITHUB_ENV"
+          echo "TASK_CODE=$task_code" >> "$GITHUB_ENV"
+
+      - name: Mark exact HEAD verification pending
+        shell: bash
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$REPOSITORY/statuses/$TARGET_SHA" \
+            -d "{\"state\":\"pending\",\"context\":\"Orchestrator Verify\",\"description\":\"Exact-head verification running\"}"
+
       - name: Checkout exact task HEAD
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.target_sha }}
+          ref: ${{ env.TARGET_SHA }}
 
       - name: Assert exact HEAD
-        run: test "$(git rev-parse HEAD)" = "${{ inputs.target_sha }}"
+        run: test "$(git rev-parse HEAD)" = "$TARGET_SHA"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -80,3 +121,26 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Publish exact HEAD verification status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ -z "${TARGET_SHA:-}" ]; then
+            exit 0
+          fi
+          if [ "$JOB_STATUS" = "success" ]; then
+            state="success"
+            description="Exact-head SQL tests and production build passed"
+          else
+            state="failure"
+            description="Exact-head verification failed"
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$REPOSITORY/statuses/$TARGET_SHA" \
+            -d "{\"state\":\"$state\",\"context\":\"Orchestrator Verify\",\"description\":\"$description\"}"
