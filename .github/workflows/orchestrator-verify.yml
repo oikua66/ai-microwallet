@@ -1,0 +1,82 @@
+name: Orchestrator Verify
+run-name: orchestrator-verify:${{ inputs.task_code }}:${{ inputs.target_sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: Exact task HEAD to verify
+        required: true
+        type: string
+      task_code:
+        description: Orchestrator task code
+        required: true
+        type: string
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout exact task HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_sha }}
+
+      - name: Assert exact HEAD
+        run: test "$(git rev-parse HEAD)" = "${{ inputs.target_sha }}"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare database roles
+        run: |
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          create role anon nologin;
+          create role authenticated nologin;
+          create role service_role nologin;
+          SQL
+
+      - name: Apply database migrations
+        run: |
+          if [ -d supabase/migrations ]; then
+            for file in $(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort); do
+              echo "Applying $file"
+              psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$file"
+            done
+          fi
+
+      - name: Run focused SQL tests
+        run: |
+          if [ -d supabase/tests ]; then
+            count=0
+            for file in $(find supabase/tests -maxdepth 1 -type f -name '*.sql' | sort); do
+              echo "Testing $file"
+              psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$file"
+              count=$((count + 1))
+            done
+            echo "SQL tests executed: $count"
+          fi
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Production build
+        run: npm run build
