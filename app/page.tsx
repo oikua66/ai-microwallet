@@ -1,4 +1,4 @@
-import FundingTest from "@/app/components/funding-test";
+import MicroWalletDemo from "@/app/components/micro-wallet-demo";
 
 export default function Home() {
   return (
@@ -6,8 +6,8 @@ export default function Home() {
       <section className="card">
         <p className="eyebrow">PayPal AI Hackathon 2026</p>
         <h1>AI MicroWallet</h1>
-        <p className="lead">A focused PayPal Sandbox funding test. No internal wallet balance or ledger is involved.</p>
-        <FundingTest />
+        <p className="lead">Deterministic internal micro-purchases with integer-cent balances and inspectable ledger history.</p>
+        <MicroWalletDemo />
         <p className="status">AI recommends. Code controls balances. PayPal moves money.</p>
       </section>
     </main>
