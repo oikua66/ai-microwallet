@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { userFacingError } from "@/app/lib/demo-errors";
 
 type Receipt = { orderId: string; captureId: string; amount: string; currency: string; status: string };
 
@@ -41,7 +42,7 @@ export default function FundingTest() {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId }),
     }).then(async response => {
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Capture could not be verified.");
+      if (!response.ok) throw new Error(userFacingError("paypal-capture", result.error));
       if (result.status !== "COMPLETED" || typeof result.orderId !== "string" ||
           typeof result.captureId !== "string" || result.amount !== "5.00" || result.currency !== "USD") {
         throw new Error("PayPal did not confirm a completed capture. No successful funding is reported.");
@@ -49,7 +50,7 @@ export default function FundingTest() {
       setReceipt(result);
       requestKey.current = "";
       clearStoredRequestKey();
-    }).catch(error => setMessage(error instanceof Error ? error.message : "Capture could not be verified."))
+    }).catch(error => setMessage(userFacingError("paypal-capture", error)))
       .finally(() => setBusy(false));
   }, []);
 
@@ -72,10 +73,10 @@ export default function FundingTest() {
         body: JSON.stringify({ idempotencyKey: requestKey.current }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not create a PayPal Sandbox order.");
+      if (!response.ok) throw new Error(userFacingError("paypal-order", result.error));
       window.location.assign(result.approvalUrl);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not start payment.");
+      setMessage(userFacingError("paypal-order", error));
       setBusy(false);
     }
   }

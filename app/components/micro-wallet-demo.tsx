@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { userFacingError } from "@/app/lib/demo-errors";
 
 type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number };
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
@@ -67,7 +68,7 @@ export default function MicroWalletDemo() {
           body: JSON.stringify({ orderId }),
         });
         const capture = await response.json();
-        if (!response.ok) throw new Error(capture.error || "PayPal capture could not be verified.");
+        if (!response.ok) throw new Error(userFacingError("paypal-capture", capture.error));
         if (active) {
           setPaypalStatus(`PayPal Sandbox funding confirmed: ${capture.amount} ${capture.currency}; capture reference ${capture.captureId}.`);
           setPaypalRetryOrderId(null);
@@ -77,7 +78,7 @@ export default function MicroWalletDemo() {
         try { await refresh(); } catch { if (active) setDemoError({ source: "history", message: "Funding was confirmed, but wallet history could not be refreshed." }); }
       } catch (reason) {
         if (active) {
-          const message = reason instanceof Error ? reason.message : "PayPal capture could not be verified.";
+          const message = userFacingError("paypal-capture", reason);
           setPaypalStatus(message);
           setDemoError({ source: "paypal-capture", message });
         }
@@ -102,11 +103,11 @@ export default function MicroWalletDemo() {
         body: JSON.stringify({ amountMinor: 20, currency: "USD", idempotencyKey: key.current }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Settlement failed.");
+      if (!response.ok) throw new Error(userFacingError("purchase", result.error));
       setReceipt(result); key.current = "";
       try { await refresh(); } catch { setDemoError({ source: "history", message: "Purchase completed, but wallet history couldn’t refresh. Please try again." }); }
     } catch (reason) {
-      setDemoError({ source: "purchase", message: reason instanceof Error ? reason.message : "Settlement failed." });
+      setDemoError({ source: "purchase", message: userFacingError("purchase", reason) });
     } finally { setBusy(false); }
   }
 
@@ -157,12 +158,12 @@ export default function MicroWalletDemo() {
         body: JSON.stringify({ orderId }),
       });
       const capture = await response.json();
-      if (!response.ok) throw new Error(capture.error || "PayPal capture could not be verified.");
+      if (!response.ok) throw new Error(userFacingError("paypal-capture", capture.error));
       setPaypalStatus(`PayPal Sandbox funding confirmed: ${capture.amount} ${capture.currency}; capture reference ${capture.captureId}.`);
       setPaypalRetryOrderId(null);
       try { await refresh(); } catch { setDemoError({ source: "history", message: "Funding was confirmed, but wallet history could not be refreshed." }); }
     } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "PayPal capture could not be verified.";
+      const message = userFacingError("paypal-capture", reason);
       setPaypalStatus(message);
       setDemoError({ source: "paypal-capture", message });
     } finally { setPaypalBusy(false); }
@@ -179,12 +180,12 @@ export default function MicroWalletDemo() {
         body: JSON.stringify({ idempotencyKey: paypalOrderKey.current }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not start PayPal Sandbox funding.");
+      if (!response.ok) throw new Error(userFacingError("paypal-order", result.error));
       if (typeof result.approvalUrl !== "string") throw new Error("PayPal did not provide an approval link.");
       setPaypalStatus("Continue to PayPal Sandbox to approve the real funding transaction.");
       window.location.assign(result.approvalUrl);
     } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "Could not start PayPal Sandbox funding.";
+      const message = userFacingError("paypal-order", reason);
       setPaypalStatus(message);
       setDemoError({ source: "paypal-order", message });
       setPaypalBusy(false);
