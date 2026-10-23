@@ -49,6 +49,29 @@ begin
   end if;
 
   begin
+    update public.micro_wallet_ledger_entries
+       set amount_minor = 124
+     where transaction_id = (first_result->>'reference')::uuid;
+    raise exception 'Expected immutable-ledger rejection';
+  exception when others then
+    if sqlerrm <> 'Ledger evidence is immutable' then raise; end if;
+  end;
+
+  begin
+    perform public.settle_micro_purchase(buyer_id, seller_id, 124, 'USD', request_key);
+    raise exception 'Expected conflicting idempotency-key rejection';
+  exception when others then
+    if sqlerrm <> 'Idempotency key was already used for a different settlement' then raise; end if;
+  end;
+
+  begin
+    perform public.settle_micro_purchase(buyer_id, buyer_id, 1, 'USD', 'h002-self-' || gen_random_uuid()::text);
+    raise exception 'Expected same-wallet rejection';
+  exception when others then
+    if sqlerrm <> 'Buyer and seller must be distinct wallets' then raise; end if;
+  end;
+
+  begin
     perform public.settle_micro_purchase(buyer_id, seller_id, 376, 'USD', 'h002-insufficient-' || gen_random_uuid()::text);
     raise exception 'Expected insufficient-balance rejection';
   exception when others then
