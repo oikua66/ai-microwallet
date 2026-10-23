@@ -1,0 +1,49 @@
+name: H007 Final Verify
+on:
+  push:
+    branches: [verify/h007-final]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 077dbee7af5e1a044d302e6f5d5e8104acf2b359
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare roles
+        run: |
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          create role anon nologin;
+          create role authenticated nologin;
+          create role service_role nologin;
+          SQL
+      - name: Apply migrations
+        run: |
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/202606100001_h002_internal_microwallet.sql
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/202606110001_h006_settlement_summary.sql
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/202606120001_h007_integrated_ui_state.sql
+      - name: Run H-006 baseline test
+        run: psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/h006_settlement_summary.sql
+      - name: Run H-007 product service test
+        run: psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/h007_product_service.sql
+      - name: Install dependencies
+        run: npm install
+      - name: Production build
+        run: npm run build
