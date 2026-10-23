@@ -5,7 +5,14 @@ import AIRecommendationDemo from "@/app/components/ai-recommendation-demo";
 
 type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number };
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
-type State = { wallets: Wallet[]; ledger: Array<{ reference: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string }>; summary: { micro_purchase_count: number; real_paypal_payment_count: number; internal_volume: number; average_micro_purchase: number; seller_pending_balance: number } };
+type Funding = { orderId: string; captureId: string; amountMinor: number; currency: string; createdAt: string };
+type LedgerEntry = { reference: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string };
+type State = {
+  wallets: Wallet[];
+  ledger: LedgerEntry[];
+  fundings: Funding[];
+  summary: { micro_purchase_count: number; real_paypal_payment_count: number; internal_volume: number; average_micro_purchase: number; seller_pending_balance: number };
+};
 const money = (minor: number, currency = "USD") => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, "0")} ${currency}`;
 
 export default function MicroWalletDemo() {
@@ -115,12 +122,18 @@ export default function MicroWalletDemo() {
     <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
     <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
     <p>Withdrawal request: Not requested. No PayPal payout is executed or claimed.</p>
+
+    <AIRecommendationDemo />
+
     <div className="funding">
-      <h3>PayPal Sandbox top-up</h3>
-      <p>Approve a real Sandbox funding transaction; this is separate from internal micro-purchases.</p>
-      <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "Top up with PayPal"}</button>
+      <h3>Merchant checkout</h3>
+      <p>Demo micro-purchase: <strong>0.20 USD</strong></p>
+      <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>{" "}
+      <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "PayPal — top up wallet first"}</button>
+      <p>MicroWallet settles the micro-purchase internally. The PayPal option funds the buyer wallet first; it does not create a PayPal transaction for this individual micro-purchase.</p>
       {paypalStatus && <p role="status">{paypalStatus}</p>}
     </div>
+
     {state?.summary && <div className="settlement-summary" aria-label="Settlement summary">
       <h3>Settlement summary</h3>
       <p>Internal micro-purchases (N): {state.summary.micro_purchase_count}</p>
@@ -130,10 +143,7 @@ export default function MicroWalletDemo() {
       <p>Average micro-purchase: {state.summary.average_micro_purchase.toFixed(2)} USD</p>
       <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
     </div>}
-    <p>Merchant checkout — demo micro-purchase: <strong>0.20 USD</strong></p>
-    <AIRecommendationDemo />
-    <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>
-    <p>MicroWallet checkout is deterministic internal settlement. PayPal is the separate funding alternative above.</p>
+
     {error && <p className="notice" role="alert">{error}</p>}
     {receipt && <div className="receipt" role="status">
       <h3>Internal settlement complete</h3>
@@ -143,9 +153,15 @@ export default function MicroWalletDemo() {
       <p>Seller balance after: {money(receipt.sellerBalanceMinor, receipt.currency)}</p>
       <p><strong>Internal MicroWallet transaction — no PayPal transaction created</strong></p>
     </div>}
-    <h3>Ledger history</h3>
+
+    <h3>Internal ledger</h3>
     {state?.ledger.length ? <ol>{state.ledger.map(entry => <li key={entry.reference}>
       <strong>Demo micro-purchase</strong> — reference {entry.reference}; {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}
-    </li>)}</ol> : <p>{state ? "No internal settlements recorded yet. Complete a MicroWallet checkout to create the first ledger entry." : "Ledger is unavailable until wallet history loads."}</p>
+    </li>)}</ol> : <p>{state ? "No internal settlements recorded yet. Complete a MicroWallet checkout to create the first ledger entry." : "Ledger is unavailable until wallet history loads."}</p>}
+
+    <h3>PayPal funding references</h3>
+    {state?.fundings?.length ? <ol>{state.fundings.map(funding => <li key={funding.captureId}>
+      <strong>External PayPal Sandbox funding</strong> — {money(funding.amountMinor, funding.currency)}; order {funding.orderId}; capture {funding.captureId}; {new Date(funding.createdAt).toLocaleString()}
+    </li>)}</ol> : <p>{state ? "No verified PayPal funding has been recorded yet." : "Funding history is unavailable until wallet history loads."}</p>}
   </section>;
 }
