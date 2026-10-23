@@ -26,7 +26,7 @@ export default function MicroWalletDemo() {
   const refresh = useCallback(async () => {
     const response = await fetch("/api/micro-wallet", { cache: "no-store" });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Could not load wallet history.");
+    if (!response.ok) throw new Error("Wallet history couldn’t load. Please try again.");
     setState(result);
   }, []);
 
@@ -94,6 +94,36 @@ export default function MicroWalletDemo() {
     } finally { setBusy(false); }
   }
 
+  async function runDemoPurchases() {
+    setBusy(true); setError(""); setReceipt(null);
+    let completed = 0;
+    let latest: Receipt | null = null;
+    try {
+      for (let index = 0; index < 3; index++) {
+        const response = await fetch("/api/micro-wallet", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amountMinor: 20, currency: "USD", idempotencyKey: crypto.randomUUID() }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error("A purchase couldn’t be completed.");
+        latest = result;
+        completed++;
+      }
+      if (latest) setReceipt(latest);
+      try { await refresh(); } catch { setError("Three purchases completed, but history couldn’t refresh. Please try again."); }
+    } catch {
+      setError(completed
+        ? `${completed} of 3 purchases completed. Refresh wallet history to see the recorded purchases.`
+        : "A purchase couldn’t be completed. Please try again.");
+      if (completed) { try { await refresh(); } catch { /* Keep the partial-completion message visible. */ } }
+    } finally { setBusy(false); }
+  }
+
+  async function retryRefresh() {
+    setError("");
+    try { await refresh(); } catch { setError("Wallet history couldn’t load. Please try again."); }
+  }
+
   async function startPaypalFunding() {
     setPaypalBusy(true); setError(""); setPaypalStatus("Creating a PayPal Sandbox funding order…");
     try {
@@ -135,6 +165,7 @@ export default function MicroWalletDemo() {
       <h3>Buy a demo digital service</h3>
       <p>Demo micro-purchase: <strong>0.20 USD</strong></p>
       <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>{" "}
+      <button type="button" onClick={runDemoPurchases} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Run 3 internal purchases"}</button>{" "}
       <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "PayPal — top up wallet first"}</button>
       <p>AI recommendations are advice only. Deterministic policy settles this 0.20 USD purchase internally. PayPal Sandbox is the external funding alternative: it funds the buyer wallet first and does not create a PayPal transaction for this individual micro-purchase.</p>
       {paypalStatus && <p role="status">{paypalStatus}</p>}
@@ -151,7 +182,7 @@ export default function MicroWalletDemo() {
       <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
     </div>}
 
-    {error && <p className="notice" role="alert">{error}</p>}
+    {error && <div className="notice" role="alert"><p>{error}</p><button type="button" onClick={retryRefresh} disabled={busy}>Retry wallet history</button></div>}
     {receipt && <div className="receipt" role="status">
       <h3>Internal settlement complete</h3>
       <p>Reference: {receipt.reference}{receipt.duplicate ? " (idempotent retry)" : ""}</p>
