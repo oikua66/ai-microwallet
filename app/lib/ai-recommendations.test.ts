@@ -24,6 +24,9 @@ test("unsafe or unsupported recommendations fail closed", () => {
   throws(() => validateRecommendation(history, {
     recommendAggregation: true, reason: "Payment completed successfully.", recommendedAmountMinor: 500, confidence: 0.9,
   }));
+  throws(() => validateRecommendation(history, {
+    recommendAggregation: true, reason: "This will save $5 in fees.", recommendedAmountMinor: 500, confidence: 0.9,
+  }));
   throws(() => validateRecommendation([{ merchant: "Shop", amountMinor: 100, currency: "USD", type: "purchase" }], {
     recommendAggregation: true, reason: "Group this purchase.", recommendedAmountMinor: 100, confidence: 0.9,
   }));

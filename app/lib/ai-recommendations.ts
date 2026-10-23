@@ -59,7 +59,7 @@ export function validateRecommendation(historyValue: unknown, output: unknown) {
       typeof result.recommendAggregation !== "boolean" || typeof result.reason !== "string" || result.reason.trim().length < 1 || result.reason.length > 240 ||
       !Number.isSafeInteger(result.recommendedAmountMinor) || (result.recommendedAmountMinor as number) < 0 ||
       typeof result.confidence !== "number" || !Number.isFinite(result.confidence) || result.confidence < 0 || result.confidence > 1 ||
-      /(execute|payment completed|pay now|transfer funds|send money|guaranteed savings)/i.test(result.reason)) {
+      /(execute|payment completed|pay now|transfer funds|send money|guaranteed savings|\b(?:i|we|microwallet|the system)\s+(?:have\s+)?(?:paid|sent|transferred|initiated|executed)\b|\b(?:payment|transfer|payout)\s+(?:has been|was|is)\s+(?:made|sent|completed|executed)\b|\b(?:save|saves|saving|savings|reduce|reduces|lower|lowers|avoid|avoids)\b.{0,40}\b(?:fee|fees|cost|costs|charge|charges)\b|\b(?:fee|fees|cost|costs|charge|charges)\b.{0,40}\b(?:save|saves|saving|savings|reduced|lowered|avoided)\b)/i.test(result.reason)) {
     throw new Error("Invalid recommendation.");
   }
   const evidence = deriveEvidence(history);
