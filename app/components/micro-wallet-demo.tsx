@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number };
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
 type Funding = { orderId: string; captureId: string; amountMinor: number; currency: string; createdAt: string };
-type LedgerEntry = { reference: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string };
+type LedgerEntry = { reference: string; productService: string; buyerWalletId: string; sellerWalletId: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string };
 type State = {
   wallets: Wallet[];
   ledger: LedgerEntry[];
@@ -162,9 +162,9 @@ export default function MicroWalletDemo() {
     </div>}
 
     <h3>Internal ledger</h3>
-    <p>Each entry records the service, internal purchase reference, buyer debit, seller credit, and timestamp. PayPal funding references are listed separately because wallet funding is not a separate PayPal transaction for each purchase.</p>
+    <p>Each entry records the service, internal purchase and wallet references, buyer debit, seller credit, and timestamp. PayPal funding references are listed separately because funding is recorded at wallet level, not linked to an individual purchase.</p>
     {state?.ledger.length ? <ol>{state.ledger.map(entry => <li key={entry.reference}>
-      <strong>Demo micro-purchase</strong> — internal reference {entry.reference}; buyer debit {money(entry.amountMinor, entry.currency)}; seller credit {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}. PayPal funding reference, if applicable, is listed separately below.
+      <strong>{entry.productService}</strong> — internal purchase reference {entry.reference}; buyer wallet {entry.buyerWalletId}; seller wallet {entry.sellerWalletId}; buyer debit {money(entry.amountMinor, entry.currency)}; seller credit {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}. PayPal funding references are shown separately below when recorded.
     </li>)}</ol> : <p>{state ? "No internal settlements recorded yet. Complete a MicroWallet checkout to create the first ledger entry." : "Ledger is unavailable until wallet history loads."}</p>}
 
     <h3>PayPal funding references</h3>

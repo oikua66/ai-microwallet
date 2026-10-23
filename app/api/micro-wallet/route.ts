@@ -26,7 +26,17 @@ async function rpc(name: string, body: Record<string, unknown>) {
 
 export async function GET() {
   try {
-    return NextResponse.json(await rpc("micro_wallet_demo_state", {}), { headers: { "Cache-Control": "no-store" } });
+    const state = await rpc("micro_wallet_demo_state", {});
+    if (state && typeof state === "object" && Array.isArray(state.ledger)) {
+      const ledger = state.ledger.map((entry: Record<string, unknown>) => ({
+        ...entry,
+        productService: "Demo digital service",
+        buyerWalletId: BUYER,
+        sellerWalletId: SELLER,
+      }));
+      return NextResponse.json({ ...state, ledger }, { headers: { "Cache-Control": "no-store" } });
+    }
+    return NextResponse.json(state, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "MicroWallet history is unavailable. Check server-side Supabase configuration and migration." }, { status: 503 });
   }
