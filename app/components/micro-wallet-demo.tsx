@@ -114,17 +114,25 @@ export default function MicroWalletDemo() {
 
   const buyer = state?.wallets.find(wallet => wallet.role === "buyer");
   const seller = state?.wallets.find(wallet => wallet.role === "seller");
-  return <section className="funding">
-    <h2>Internal MicroWallet demo</h2>
-    <p>Demo seed only; this balance is not represented as PayPal-funded.</p>
+  return <section className="stage wallet-stage" aria-label="Buyer and seller MicroWallet">
+    <div id="wallet">
+      <p className="stage-label">Step 2 · Persistent buyer wallet</p>
+      <h2>Buyer MicroWallet</h2>
+      <p>Balances and history load from backend state. Demo seed funds are not represented as PayPal-funded.</p>
+    </div>
     {state === null && !error && <p role="status">Loading persistent wallet balances and ledger…</p>}
     <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
     <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
     <p>Seller purchase count: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
-    <p>Seller settlement state: Accumulating internal credits. Withdrawal request: Not requested. No PayPal payout is executed or claimed.</p>
+    <div id="seller" className="seller-state">
+      <p className="stage-label">Step 4 · Seller MicroWallet</p>
+      <h3>Seller accumulation &amp; withdrawal state</h3>
+      <p>Settlement state: accumulating internal credits. Withdrawal request: not requested. No external payout is executed or claimed.</p>
+    </div>
 
-    <div className="funding">
-      <h3>Merchant checkout</h3>
+    <div className="checkout-stage" id="checkout">
+      <p className="stage-label">Step 3 · Merchant checkout</p>
+      <h3>Buy a demo digital service</h3>
       <p>Demo micro-purchase: <strong>0.20 USD</strong></p>
       <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>{" "}
       <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "PayPal — top up wallet first"}</button>
@@ -132,8 +140,9 @@ export default function MicroWalletDemo() {
       {paypalStatus && <p role="status">{paypalStatus}</p>}
     </div>
 
-    {state?.summary && <div className="settlement-summary" aria-label="Settlement summary">
-      <h3>Settlement summary</h3>
+    {state?.summary && <div className="settlement-summary" id="aggregation" aria-label="Aggregation summary">
+      <p className="stage-label">Step 5 · Recorded aggregation</p>
+      <h3>Internal purchases vs. PayPal funding</h3>
       <p>Internal micro-purchases (N): {state.summary.micro_purchase_count}</p>
       <p>Real PayPal funding transactions (M): {state.summary.real_paypal_payment_count}</p>
       <p>{state.summary.micro_purchase_count > state.summary.real_paypal_payment_count ? "N > M: multiple internal purchases are aggregated without a PayPal transaction per purchase." : "Each internal purchase avoids a separate PayPal transaction. Complete multiple MicroWallet purchases to see N exceed M."}</p>
@@ -153,6 +162,7 @@ export default function MicroWalletDemo() {
     </div>}
 
     <h3>Internal ledger</h3>
+    <p>Each entry records the service, internal purchase reference, buyer debit, seller credit, and timestamp. PayPal funding references are listed separately because wallet funding is not a separate PayPal transaction for each purchase.</p>
     {state?.ledger.length ? <ol>{state.ledger.map(entry => <li key={entry.reference}>
       <strong>Demo micro-purchase</strong> — internal reference {entry.reference}; buyer debit {money(entry.amountMinor, entry.currency)}; seller credit {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}. PayPal funding reference, if applicable, is listed separately below.
     </li>)}</ol> : <p>{state ? "No internal settlements recorded yet. Complete a MicroWallet checkout to create the first ledger entry." : "Ledger is unavailable until wallet history loads."}</p>}
