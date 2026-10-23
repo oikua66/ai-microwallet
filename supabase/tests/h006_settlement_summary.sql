@@ -56,8 +56,7 @@ begin
     raise exception 'Settlement metrics did not include the recorded funding and three internal purchases';
   end if;
 
-  select round((coalesce(sum(amount_minor), 0)::numeric + 60) / 100 /
-               (count(*) + 3), 2)
+  select round(coalesce(avg(amount_minor), 0)::numeric / 100, 2)
     into expected_average
     from public.micro_wallet_transactions
    where buyer_wallet_id = buyer_id and seller_wallet_id = seller_id;
