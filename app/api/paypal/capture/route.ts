@@ -3,6 +3,19 @@ import { FUNDING_AMOUNT, FUNDING_CURRENCY, orders, paypalRequest } from "@/app/l
 
 export const runtime = "nodejs";
 
+async function recordFunding(orderId: string, captureId: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("MicroWallet storage is not configured.");
+  const response = await fetch(`${url}/rest/v1/rpc/record_paypal_funding`, {
+    method: "POST",
+    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_order_id: orderId, p_capture_id: captureId, p_amount_minor: 500, p_currency: FUNDING_CURRENCY }),
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error("Verified funding could not be recorded.");
+}
+
 export async function POST(request: Request) {
   let orderId: string;
   try {
@@ -47,6 +60,7 @@ export async function POST(request: Request) {
           currency: FUNDING_CURRENCY,
           status: "COMPLETED",
         };
+        await recordFunding(orderId, completedCapture.id);
         return order.capture;
       }
       if (orderDetails.status !== "APPROVED") throw new Error("PayPal order has not been approved.");
@@ -72,9 +86,10 @@ export async function POST(request: Request) {
         currency: capture.amount.currency_code,
         status: capture.status,
       };
+      await recordFunding(orderId, capture.id);
       return order.capture;
     })();
-    order.capturePromise.catch(() => { order.capturePromise = undefined; });
+    order.capturePromise.catch(() => { order.capturePromise = undefined; order.capture = undefined; });
   }
 
   try {

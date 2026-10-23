@@ -5,7 +5,7 @@ import AIRecommendationDemo from "@/app/components/ai-recommendation-demo";
 
 type Wallet = { role: "buyer" | "seller"; currency: string; balanceMinor: number };
 type Receipt = { reference: string; amountMinor: number; currency: string; buyerBalanceMinor: number; sellerBalanceMinor: number; duplicate: boolean };
-type State = { wallets: Wallet[]; ledger: Array<{ reference: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string }> };
+type State = { wallets: Wallet[]; ledger: Array<{ reference: string; amountMinor: number; currency: string; buyerBalanceAfter: number; sellerBalanceAfter: number; createdAt: string }>; summary: { micro_purchase_count: number; real_paypal_payment_count: number; internal_volume: number; average_micro_purchase: number; seller_pending_balance: number } };
 const money = (minor: number, currency = "USD") => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, "0")} ${currency}`;
 
 export default function MicroWalletDemo() {
@@ -47,7 +47,15 @@ export default function MicroWalletDemo() {
     <h2>Internal MicroWallet demo</h2>
     <p>Demo seed only; this balance is not represented as PayPal-funded.</p>
     <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
-    <p>Seller balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
+    <p>Seller pending balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
+    {state?.summary && <div className="settlement-summary" aria-label="Settlement summary">
+      <h3>Settlement summary</h3>
+      <p>Internal micro-purchases: {state.summary.micro_purchase_count}</p>
+      <p>Real PayPal funding transactions: {state.summary.real_paypal_payment_count}</p>
+      <p>Internal volume: {state.summary.internal_volume.toFixed(2)} USD</p>
+      <p>Average micro-purchase: {state.summary.average_micro_purchase.toFixed(2)} USD</p>
+      <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
+    </div>}
     <p>Micro-purchase: <strong>0.25 USD</strong></p>
     <AIRecommendationDemo />
     <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>
