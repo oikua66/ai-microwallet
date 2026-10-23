@@ -1,3 +1,6 @@
+alter table public.micro_wallet_transactions
+  add column if not exists product_service text not null default 'Demo digital service';
+
 create or replace function public.micro_wallet_demo_state()
 returns jsonb
 language sql security definer
@@ -10,6 +13,7 @@ as $$
       where id in ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002')),
     'ledger', (select coalesce(jsonb_agg(jsonb_build_object(
       'reference', t.id, 'amountMinor', t.amount_minor, 'currency', t.currency,
+      'productService', t.product_service,
       'buyerBalanceAfter', t.buyer_balance_after, 'sellerBalanceAfter', t.seller_balance_after,
       'createdAt', t.created_at
     ) order by t.created_at desc), '[]'::jsonb) from public.micro_wallet_transactions t

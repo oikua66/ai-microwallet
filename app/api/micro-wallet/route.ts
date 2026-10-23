@@ -30,7 +30,6 @@ export async function GET() {
     if (state && typeof state === "object" && Array.isArray(state.ledger)) {
       const ledger = state.ledger.map((entry: Record<string, unknown>) => ({
         ...entry,
-        productService: "Demo digital service",
         buyerWalletId: BUYER,
         sellerWalletId: SELLER,
       }));
