@@ -121,7 +121,8 @@ export default function MicroWalletDemo() {
     {state === null && !error && <p role="status">Loading persistent wallet balances and ledger…</p>}
     <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
     <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
-    <p>Withdrawal request: Not requested. No PayPal payout is executed or claimed.</p>
+    <p>Seller purchase count: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
+    <p>Seller settlement state: Accumulating internal credits. Withdrawal request: Not requested. No PayPal payout is executed or claimed.</p>
 
     <AIRecommendationDemo />
 
@@ -130,7 +131,7 @@ export default function MicroWalletDemo() {
       <p>Demo micro-purchase: <strong>0.20 USD</strong></p>
       <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>{" "}
       <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "PayPal — top up wallet first"}</button>
-      <p>MicroWallet settles the micro-purchase internally. The PayPal option funds the buyer wallet first; it does not create a PayPal transaction for this individual micro-purchase.</p>
+      <p>AI recommendations are advice only. Deterministic policy settles this 0.20 USD purchase internally. PayPal Sandbox is the external funding alternative: it funds the buyer wallet first and does not create a PayPal transaction for this individual micro-purchase.</p>
       {paypalStatus && <p role="status">{paypalStatus}</p>}
     </div>
 
@@ -138,7 +139,7 @@ export default function MicroWalletDemo() {
       <h3>Settlement summary</h3>
       <p>Internal micro-purchases (N): {state.summary.micro_purchase_count}</p>
       <p>Real PayPal funding transactions (M): {state.summary.real_paypal_payment_count}</p>
-      <p>{state.summary.micro_purchase_count > state.summary.real_paypal_payment_count ? "N > M: multiple internal purchases are aggregated without a PayPal transaction per purchase." : "PayPal transactions fund the wallet; internal purchases do not create separate PayPal transactions."}</p>
+      <p>{state.summary.micro_purchase_count > state.summary.real_paypal_payment_count ? "N > M: multiple internal purchases are aggregated without a PayPal transaction per purchase." : "Each internal purchase avoids a separate PayPal transaction. Complete multiple MicroWallet purchases to see N exceed M."}</p>
       <p>Internal volume: {state.summary.internal_volume.toFixed(2)} USD</p>
       <p>Average micro-purchase: {state.summary.average_micro_purchase.toFixed(2)} USD</p>
       <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
@@ -156,7 +157,7 @@ export default function MicroWalletDemo() {
 
     <h3>Internal ledger</h3>
     {state?.ledger.length ? <ol>{state.ledger.map(entry => <li key={entry.reference}>
-      <strong>Demo micro-purchase</strong> — reference {entry.reference}; {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}
+      <strong>Demo micro-purchase</strong> — internal reference {entry.reference}; buyer debit {money(entry.amountMinor, entry.currency)}; seller credit {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}. PayPal funding reference, if applicable, is listed separately below.
     </li>)}</ol> : <p>{state ? "No internal settlements recorded yet. Complete a MicroWallet checkout to create the first ledger entry." : "Ledger is unavailable until wallet history loads."}</p>}
 
     <h3>PayPal funding references</h3>
