@@ -48,6 +48,10 @@ export default function MicroWalletDemo() {
     async function handlePaypalReturn() {
       const url = new URL(window.location.href);
       const result = url.searchParams.get("paypal");
+      if (!result && url.searchParams.has("PayerID")) {
+        clearPaypalQuery();
+        return;
+      }
       if (result === "cancel") {
         setPaypalStatus("PayPal Sandbox funding was cancelled; no funding is reported.");
         clearPaypalQuery();
