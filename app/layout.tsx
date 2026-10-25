@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "AI MicroWallet",
-  description: "AI-managed micro-wallets for aggregated micro-commerce powered by PayPal payment infrastructure.",
+  description: "Hackathon demo of an AI-assisted MicroWallet for aggregated low-value purchases using PayPal Sandbox.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

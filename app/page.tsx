@@ -24,6 +24,10 @@ export default function Home() {
         <AIRecommendationDemo />
         <MicroWalletDemo />
         <p className="status">AI recommends. Code controls balances. PayPal moves money.</p>
+        <footer>
+          <p><strong>Hackathon demo · No real-money service · PayPal Sandbox only</strong></p>
+          <p><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms &amp; Demo Disclaimer</a></p>
+        </footer>
       </section>
     </main>
   );
