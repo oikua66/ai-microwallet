@@ -1,16 +1,25 @@
 # Product video script — target 2:20
 
-Use synthetic transaction history and PayPal Sandbox. Keep the responsibility boundary explicit: AI recommends; deterministic code controls balances; PayPal handles external funding. Do not imply banking/EMI status or an implemented external seller payout.
+Use the public demo, demo wallet balances, synthetic transaction examples, and PayPal Sandbox only. Keep the responsibility boundary clear: AI identifies a suitable pattern; application code controls wallet balances and purchases; PayPal Sandbox is used for external wallet funding. Do not imply banking/EMI status, production payments, or an implemented seller payout rail.
 
 | Time | Visual and narration |
 |---|---|
-| 0:00–0:15 | **Visual:** Title and several small purchase examples. **Narration:** “Small purchases can create repeated payment friction. AI MicroWallet asks a simple question: when can we aggregate the real payment activity without losing transaction-level control?” |
-| 0:15–0:40 | **Visual:** Run the synthetic history through the recommendation UI. **Narration:** “AI reviews transaction history and identifies where aggregation makes sense. The recommendation is advice only. It cannot move money or change a balance.” |
-| 0:40–0:55 | **Visual:** Show the three-role architecture. **Narration:** “AI finds where aggregation makes sense. MicroWallet settles the micro-purchases. PayPal moves the real money.” |
-| 0:55–1:15 | **Visual:** Show the persistent buyer wallet, then start the PayPal Sandbox top-up. **Narration:** “The buyer wallet keeps deterministic balance and ledger state. External funding starts through PayPal Sandbox, where the buyer approves the real funding transaction.” |
-| 1:15–1:35 | **Visual:** Return from PayPal and show the confirmed funding reference. **Narration:** “The server verifies the PayPal order, amount, currency, and capture before recording funding. A failed or unverified capture is never reported as successful.” |
-| 1:35–1:55 | **Visual:** Complete an internal 0.20 USD purchase and show buyer debit, seller credit, product/service and ledger reference. **Narration:** “Now the micro-purchase is settled internally by deterministic code. This purchase does not create another PayPal transaction.” |
-| 1:55–2:10 | **Visual:** Use the three-purchase demo and show the aggregation panel with internal purchase count N and PayPal funding count M. **Narration:** “Multiple internal purchases can accumulate behind fewer external funding transactions. The demo makes the N-versus-M relationship visible while keeping every internal purchase auditable.” |
-| 2:10–2:20 | **Visual:** End card with repository and demo URL only after unauthenticated access is verified. **Narration:** “AI recommends. Code controls balances. PayPal moves money. That is AI MicroWallet.” |
+| 0:00–0:15 | **Visual:** Open the public AI MicroWallet page and show the hero with the five numbered steps. **Narration:** “AI MicroWallet is a hackathon prototype for repeated low-value digital purchases. Instead of sending every small purchase through a separate external payment flow, the buyer reuses one wallet balance.” |
+| 0:15–0:38 | **Visual:** Stay on **Step 1 — AI opportunity scan**, show the sample transaction history, then click **Analyze payment pattern**. **Narration:** “First, AI looks at a sample purchase pattern and decides whether a MicroWallet is a good fit. The recommendation is advisory only. AI cannot move money or change wallet balances.” |
+| 0:38–0:55 | **Visual:** Scroll to **Step 2 — Buyer MicroWallet** and **Step 3 — Seller MicroWallet**. **Narration:** “The buyer keeps a reusable balance. On the other side, small purchases accumulate in the seller MicroWallet. Balance changes are controlled by application logic, not by the AI model.” |
+| 0:55–1:18 | **Visual:** Go to **Step 4 — Merchant checkout**. Click **Run 3 demo purchases** and then show the updated buyer and seller balances. **Narration:** “Here one digital service costs twenty cents. I can run three demo purchases. The buyer balance decreases, the seller balance increases, and each purchase remains individually recorded.” |
+| 1:18–1:38 | **Visual:** In Step 4 click **Add funds with PayPal Sandbox**. Briefly show the PayPal Sandbox approval screen, approve the funding, and return to AI MicroWallet. **Narration:** “When the wallet needs more funds, PayPal Sandbox handles the external funding step. This is Sandbox test activity, not a production payment.” |
+| 1:38–1:55 | **Visual:** Show the buyer balance after the return, then scroll to the PayPal Sandbox funding record with the 5.00 USD amount and capture reference. **Narration:** “After the return, the server verifies the capture before the demo wallet balance is updated, and the funding reference is recorded.” |
+| 1:55–2:12 | **Visual:** Show **Step 5 — Aggregation** with `3` MicroWallet purchases and `1` PayPal funding transaction. **Narration:** “This is the main idea: several small purchases can be completed from the MicroWallet while fewer external funding transactions are needed. Here, three purchases are supported by one PayPal funding event.” |
+| 2:12–2:20 | **Visual:** End on the hero or a simple end card showing the live demo and GitHub repository. **Narration:** “AI identifies the opportunity. Code controls balances. PayPal Sandbox funds the wallet. That is AI MicroWallet.” |
 
-**Runtime target:** 2:20. Keep the finished video between 2:00 and 2:30. Label synthetic/demo data clearly. Do not put credentials, private transaction identifiers, or deployment secrets on screen.
+## Recording notes
+
+- Keep the final runtime close to **2:20** and below **3:00**.
+- Show the actual public demo at `https://ai-microwallet.vercel.app/`.
+- Use the public repository `https://github.com/oikua66/ai-microwallet` on the end card.
+- Keep the PayPal Sandbox segment short; the product UI is the main story.
+- Do not show credentials, environment variables, private browser data, or personal PayPal account information.
+- Sandbox capture references and demo purchase references may appear in the product UI.
+- Avoid engineering shorthand such as `N`, `M`, internal task IDs, commit SHAs, or implementation-history terminology in the narration.
+- Do not say “real money”, “bank”, “payment institution”, or suggest that the prototype provides a production custodial wallet.
