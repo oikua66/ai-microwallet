@@ -12,8 +12,8 @@ export default function Home() {
         <nav className="journey-nav" aria-label="Demo journey">
           <a href="#opportunity">1. AI opportunity</a>
           <a href="#wallet">2. Buyer wallet</a>
-          <a href="#checkout">3. Merchant checkout</a>
-          <a href="#seller">4. Seller & ledger</a>
+          <a href="#seller">3. Seller & ledger</a>
+          <a href="#checkout">4. Merchant checkout</a>
           <a href="#aggregation">5. Aggregation</a>
         </nav>
         <div className="journey-key" aria-label="Action types">
