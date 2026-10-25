@@ -23,6 +23,7 @@ type Result = {
     topup_bounds: { min: number; max: number } | null;
   };
   advice_only: true;
+  source?: "openai" | "deterministic_fallback";
 };
 
 const money = (amount: number) => `${amount.toFixed(2)} USD`;
@@ -60,11 +61,12 @@ export default function AIRecommendationDemo() {
     <details><summary>Show the sample transaction history</summary>
     <ul>{transactions.map((item, index) => <li key={index}>{item.merchant} — {minorMoney(item.amountMinor)}</li>)}</ul>
     </details>
-    <button type="button" onClick={analyze} disabled={busy}>{busy ? "Analyzing…" : "Analyze payment pattern"}</button>
+    <button type="button" className="action-button" onClick={analyze} disabled={busy}>{busy ? "Analyzing…" : "Analyze payment pattern"}</button>
     <p>AI recommendation is advice only. Deterministic code validates matching counts and allowed top-up bounds. This step does not change a balance or move PayPal funds.</p>
     {error && <p className="notice" role="alert">{error}</p>}
     {result && <div className="receipt" role="status">
       <h4>{result.recommend_microwallet ? "MicroWallet opportunity detected" : "No MicroWallet opportunity detected"}</h4>
+      {result.source === "deterministic_fallback" && <p className="fallback-note"><strong>OpenAI is unavailable in this deployment.</strong> Showing the deterministic policy fallback so the demo remains usable.</p>}
       <p>{result.reason}</p>
       <p>Matching low-value transactions: {result.matching_transactions}</p>
       <p>Matching spend: {money(result.evidence.matching_spend)}</p>
