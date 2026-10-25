@@ -21,8 +21,15 @@ h1 { margin: 0; font-size: clamp(40px, 8vw, 72px); line-height: 0.95; }
 .wallet-stage .funding { margin-top: 18px; padding: 18px 0; }
 .checkout-stage, .seller-state, .settlement-summary { margin-top: 20px; padding: 18px; border: 1px solid #dbe4f3; border-radius: 10px; background: #f8fafc; }
 .checkout-stage h3, .seller-state h3, .settlement-summary h3 { margin-top: 4px; }
+.production-model { margin-top: 28px; padding: 24px; border: 1px solid #c7d2fe; border-left: 5px solid #4f46e5; border-radius: 14px; background: #f8faff; line-height: 1.6; }
+.production-model h2 { margin: 4px 0 12px; }
+.production-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.production-flow > div { padding: 16px; border: 1px solid #dbe4f3; border-radius: 10px; background: #fff; }
+.production-flow p { margin-bottom: 0; }
+.production-note { margin: 16px 0 0; font-size: 14px; color: #4b5563; }
 .card ol { padding-left: 24px; }
 .card li { margin: 8px 0; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .production-flow { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .shell { padding: 14px; } .card { padding: 22px; } .stage { padding: 16px; } }
 .funding { margin-top: 24px; padding: 20px 0; border-top: 1px solid #e5e7eb; line-height: 1.6; }
 .funding h2 { margin-top: 0; }
