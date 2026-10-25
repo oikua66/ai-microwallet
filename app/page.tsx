@@ -8,18 +8,18 @@ export default function Home() {
         <p className="eyebrow">PayPal AI Hackathon 2026 · Product demo</p>
         <h1>AI MicroWallet</h1>
         <p className="lead">Turn repeated low-value purchases into a clear, auditable wallet journey.</p>
-        <p>New to the demo? Follow the numbered steps, then run three internal purchases to compare N and M. PayPal Sandbox is optional when you want to show external wallet funding.</p>
+        <p>Follow the numbered steps to see how AI identifies a good MicroWallet use case, how small purchases settle from a reusable balance, and how PayPal Sandbox can fund the wallet externally.</p>
         <nav className="journey-nav" aria-label="Demo journey">
           <a href="#opportunity">1. AI opportunity</a>
           <a href="#wallet">2. Buyer wallet</a>
-          <a href="#seller">3. Seller & ledger</a>
+          <a href="#seller">3. Seller wallet</a>
           <a href="#checkout">4. Merchant checkout</a>
           <a href="#aggregation">5. Aggregation</a>
         </nav>
         <div className="journey-key" aria-label="Action types">
-          <span><strong>AI advice</strong> — recommendation only</span>
-          <span><strong>Internal settlement</strong> — deterministic wallet ledger</span>
-          <span><strong>PayPal Sandbox</strong> — real external funding, when approved</span>
+          <span><strong>AI</strong> — identifies suitable payment patterns</span>
+          <span><strong>MicroWallet</strong> — handles repeated small purchases from one balance</span>
+          <span><strong>PayPal Sandbox</strong> — adds funds to the wallet for the demo</span>
         </div>
         <AIRecommendationDemo />
         <MicroWalletDemo />
