@@ -37,7 +37,7 @@ export default function Home() {
             </div>
             <div>
               <strong>Everyday micro-purchases</strong>
-              <p>Purchases inside those limits can be signed by the trusted device and settled without repeated login or payment approval.</p>
+              <p>Purchases inside those limits can be completed automatically by the trusted device, without repeated login or payment approval.</p>
             </div>
             <div>
               <strong>Step-up when needed</strong>
@@ -45,7 +45,7 @@ export default function Home() {
             </div>
           </div>
           <p className="production-note">
-            Example policy: up to $1 per purchase and $20 per day. Exact limits and authentication rules would be defined by the production payment and risk model.
+            Example policy: up to $1 per purchase and $20 per day. Limits and step-up authentication rules would be configurable by the wallet provider and the user.
           </p>
         </section>
 
