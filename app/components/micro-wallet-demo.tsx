@@ -209,7 +209,7 @@ export default function MicroWalletDemo() {
       <p>Small purchases accumulate in the seller wallet instead of requiring a separate external payment for every purchase.</p>
       <p>Accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
       <p>Purchases received: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
-      <p>Withdrawal is outside this demo flow.</p>
+      <p>Seller earnings accumulate in the MicroWallet.</p>
     </div>
 
     <div className="checkout-stage" id="checkout">
