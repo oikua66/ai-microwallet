@@ -6,7 +6,7 @@ Evidence state as of **2026-10-25**. Only mark an item complete when it has been
 - [x] Public repository: `https://github.com/oikua66/ai-microwallet`.
 - [x] `LICENSE` file exists in the repository root.
 - [x] Repository license is MIT.
-- [ ] Verify that GitHub visibly recognizes/displays the MIT license on the repository page.
+- [x] GitHub recognizes the repository license as MIT (`license.key = mit`, SPDX `MIT`).
 - [x] `.env.example` contains placeholders only; secrets are read from environment variables.
 - [x] README and submission documentation are present.
 
@@ -125,7 +125,7 @@ Before submission:
 - [ ] Open Privacy Policy.
 - [ ] Open Terms & Demo Disclaimer.
 - [ ] Verify repository is public.
-- [ ] Verify MIT license is visibly recognized by GitHub.
+- [x] Verify MIT license is visibly recognized by GitHub.
 - [ ] Verify YouTube video is public.
 - [ ] Verify all Devpost links from a logged-out/incognito browser.
 - [ ] Submit before the official deadline.
@@ -136,9 +136,8 @@ The public application and main technical demo flow have passed production verif
 
 Remaining submission work:
 
-1. verify visible GitHub MIT license recognition;
-2. prepare final screenshots;
-3. update and record the demo video;
-4. upload the video to YouTube;
-5. complete Devpost submission fields;
-6. perform the final MASTER walkthrough.
+1. prepare final screenshots;
+2. update and record the demo video;
+3. upload the video to YouTube;
+4. complete Devpost submission fields;
+5. perform the final MASTER walkthrough.
