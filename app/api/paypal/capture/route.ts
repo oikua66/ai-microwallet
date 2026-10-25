@@ -1,19 +1,24 @@
 import { NextResponse } from "next/server";
 import { FUNDING_AMOUNT, FUNDING_CURRENCY, orders, paypalRequest } from "@/app/lib/paypal";
+import { readFallbackState, recordFallbackFunding, writeFallbackState } from "@/app/lib/demo-wallet-fallback";
 
 export const runtime = "nodejs";
 
 async function recordFunding(orderId: string, captureId: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("MicroWallet storage is not configured.");
-  const response = await fetch(`${url}/rest/v1/rpc/record_paypal_funding`, {
-    method: "POST",
-    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ p_order_id: orderId, p_capture_id: captureId, p_amount_minor: 500, p_currency: FUNDING_CURRENCY }),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error("Verified funding could not be recorded.");
+  if (!url || !key) return false;
+  try {
+    const response = await fetch(`${url}/rest/v1/rpc/record_paypal_funding`, {
+      method: "POST",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_order_id: orderId, p_capture_id: captureId, p_amount_minor: 500, p_currency: FUNDING_CURRENCY }),
+      cache: "no-store",
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(request: Request) {
@@ -28,12 +33,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  // PayPal's order ID and request idempotency key are authoritative across server instances.
-  // Keep this map only as a per-instance cache, not as a prerequisite for capture.
   const order = orders.get(orderId) ?? { orderId };
   orders.set(orderId, order);
-  if (order.capture) return NextResponse.json(order.capture);
-  if (!order.capturePromise) {
+  if (!order.capturePromise && !order.capture) {
     order.capturePromise = (async () => {
       const orderDetails = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`);
       const purchaseUnits = orderDetails.purchase_units;
@@ -53,13 +55,7 @@ export async function POST(request: Request) {
         if (!completedCapture || typeof completedCapture.id !== "string") {
           throw new Error("PayPal did not confirm a completed capture.");
         }
-        order.capture = {
-          orderId,
-          captureId: completedCapture.id,
-          amount: FUNDING_AMOUNT,
-          currency: FUNDING_CURRENCY,
-          status: "COMPLETED",
-        };
+        order.capture = { orderId, captureId: completedCapture.id, amount: FUNDING_AMOUNT, currency: FUNDING_CURRENCY, status: "COMPLETED" };
         await recordFunding(orderId, completedCapture.id);
         return order.capture;
       }
@@ -74,18 +70,11 @@ export async function POST(request: Request) {
       const capture = Array.isArray(capturedUnits) && capturedUnits.length === 1
         ? capturedUnits[0]?.payments?.captures?.[0]
         : undefined;
-      if (result.id !== orderId || result.status !== "COMPLETED" ||
-          capture?.status !== "COMPLETED" || !capture.id ||
+      if (result.id !== orderId || result.status !== "COMPLETED" || capture?.status !== "COMPLETED" || !capture.id ||
           capture.amount?.value !== FUNDING_AMOUNT || capture.amount?.currency_code !== FUNDING_CURRENCY) {
         throw new Error("PayPal did not confirm a completed capture.");
       }
-      order.capture = {
-        orderId,
-        captureId: capture.id,
-        amount: capture.amount.value,
-        currency: capture.amount.currency_code,
-        status: capture.status,
-      };
+      order.capture = { orderId, captureId: capture.id, amount: capture.amount.value, currency: capture.amount.currency_code, status: capture.status };
       await recordFunding(orderId, capture.id);
       return order.capture;
     })();
@@ -93,7 +82,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    return NextResponse.json(await order.capturePromise);
+    const capture = order.capture ?? await order.capturePromise;
+    if (!capture) throw new Error("Missing capture");
+    const fallback = recordFallbackFunding(readFallbackState(request), capture.orderId, capture.captureId);
+    const response = NextResponse.json(capture, { headers: { "Cache-Control": "no-store" } });
+    writeFallbackState(response, fallback);
+    return response;
   } catch {
     return NextResponse.json({ error: "PayPal has not confirmed a completed capture. No successful funding is reported." }, { status: 502 });
   }
