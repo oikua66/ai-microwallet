@@ -66,15 +66,15 @@ Evidence state as of **2026-10-25**. Only mark an item complete when it has been
 - [x] PayPal Sandbox is presented as wallet funding rather than one external payment per micro-purchase.
 
 ## 8. Screenshots
-- [ ] Hero / Step 1 screenshot.
-- [ ] Buyer wallet screenshot.
-- [ ] Seller wallet after purchases screenshot.
-- [ ] Merchant checkout screenshot.
-- [ ] Aggregation screenshot showing multiple MicroWallet purchases and fewer PayPal funding transactions.
-- [ ] PayPal Sandbox funding confirmation screenshot.
-- [ ] Activity / funding reference screenshot.
-- [ ] Review screenshots for accidental secrets, unwanted query parameters, browser identifiers, or irrelevant UI.
-- [ ] Select final screenshots for the Devpost submission.
+- [x] Hero / Step 1 screenshot.
+- [x] Buyer wallet screenshot.
+- [x] Seller wallet after purchases screenshot.
+- [x] Merchant checkout screenshot.
+- [x] Aggregation screenshot showing multiple MicroWallet purchases and fewer PayPal funding transactions.
+- [x] PayPal Sandbox funding confirmation screenshot.
+- [x] Activity / funding reference screenshot.
+- [x] Screenshots reviewed for accidental secrets, unwanted query parameters, browser identifiers, and irrelevant UI.
+- [x] Final Devpost screenshot set selected: hero; buyer + seller wallets; merchant checkout; aggregation; activity + PayPal Sandbox funding.
 
 ## 9. Product video
 Current target runtime: approximately **2:20**, with the final video kept below the official maximum.
@@ -101,7 +101,7 @@ Current target runtime: approximately **2:20**, with the final video kept below 
 - [x] Public GitHub repository URL prepared.
 - [x] Public live demo URL prepared and unauthenticated access verified.
 - [ ] Public YouTube demo URL.
-- [ ] Final screenshots/assets.
+- [x] Final screenshots/assets selected.
 - [ ] Team/member name(s).
 - [ ] Required contact information.
 - [ ] Technology stack.
@@ -132,12 +132,11 @@ Before submission:
 
 ## Current blockers
 
-The public application and main technical demo flow have passed production verification.
+The public application, main technical demo flow, licensing check, and final screenshot set have passed verification.
 
 Remaining submission work:
 
-1. prepare final screenshots;
-2. update and record the demo video;
-3. upload the video to YouTube;
-4. complete Devpost submission fields;
-5. perform the final MASTER walkthrough.
+1. update and record the demo video;
+2. upload the video to YouTube;
+3. complete Devpost submission fields;
+4. perform the final MASTER walkthrough.
