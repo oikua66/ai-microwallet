@@ -23,6 +23,32 @@ export default function Home() {
         </div>
         <AIRecommendationDemo />
         <MicroWalletDemo />
+
+        <section className="production-model" aria-labelledby="production-model-title">
+          <p className="stage-label">Production model</p>
+          <h2 id="production-model-title">Authorize once. Then let small purchases stay small.</h2>
+          <p>
+            PayPal Sandbox approval is intentionally visible in this hackathon demo so external wallet funding can be verified. A production MicroWallet would use a different everyday flow.
+          </p>
+          <div className="production-flow">
+            <div>
+              <strong>One-time setup</strong>
+              <p>Authorize the device, establish a device-bound credential in secure storage, and choose spending limits.</p>
+            </div>
+            <div>
+              <strong>Everyday micro-purchases</strong>
+              <p>Purchases inside those limits can be signed by the trusted device and settled without repeated login or payment approval.</p>
+            </div>
+            <div>
+              <strong>Step-up when needed</strong>
+              <p>Re-authentication is required when limits are exceeded, the device changes, or risk controls trigger.</p>
+            </div>
+          </div>
+          <p className="production-note">
+            Example policy: up to $1 per purchase and $20 per day. Exact limits and authentication rules would be defined by the production payment and risk model.
+          </p>
+        </section>
+
         <p className="status">AI recommends. Code controls balances. PayPal moves money.</p>
         <footer>
           <p><strong>Hackathon demo · No real-money service · PayPal Sandbox only</strong></p>
