@@ -196,69 +196,70 @@ export default function MicroWalletDemo() {
   const seller = state?.wallets.find(wallet => wallet.role === "seller");
   return <section className="stage wallet-stage" aria-label="Buyer and seller MicroWallet">
     <div id="wallet">
-      <p className="stage-label">Step 2 · Persistent buyer wallet</p>
+      <p className="stage-label">Step 2 · Buyer MicroWallet</p>
       <h2>Buyer MicroWallet</h2>
-      <p>Balances and history load from backend state. Demo seed funds are not represented as PayPal-funded.</p>
+      <p>A reusable wallet balance makes small digital purchases quick and simple.</p>
     </div>
-    {state === null && !demoError && <p role="status">Loading persistent wallet balances and ledger…</p>}
-    <p>Buyer balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
-    <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
-    <p>Seller purchase count: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
+    {state === null && !demoError && <p role="status">Loading wallet…</p>}
+    <p>Available balance: <strong>{buyer ? money(buyer.balanceMinor, buyer.currency) : "—"}</strong></p>
+
     <div id="seller" className="seller-state">
       <p className="stage-label">Step 3 · Seller MicroWallet</p>
-      <h3>Seller accumulation &amp; withdrawal state</h3>
-      <p>Settlement state: accumulating internal credits. Withdrawal request: not requested. No external payout is executed or claimed.</p>
+      <h3>Seller MicroWallet</h3>
+      <p>Small purchases accumulate in the seller wallet instead of requiring a separate external payment for every purchase.</p>
+      <p>Accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
+      <p>Purchases received: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
+      <p>Withdrawal is outside this demo flow.</p>
     </div>
 
     <div className="checkout-stage" id="checkout">
       <p className="stage-label">Step 4 · Merchant checkout</p>
-      <h3>Buy a demo digital service</h3>
-      <p>Demo micro-purchase: <strong>0.20 USD</strong></p>
-      <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>{" "}
-      <button type="button" onClick={runDemoPurchases} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Run 3 internal purchases"}</button>{" "}
-      <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "PayPal — top up wallet first"}</button>
-      <p>AI recommendations are advice only. Deterministic policy settles this 0.20 USD purchase internally. PayPal Sandbox is the external funding alternative: it funds the buyer wallet first and does not create a PayPal transaction for this individual micro-purchase.</p>
+      <h3>Buy a digital service</h3>
+      <p>Demo purchase: <strong>0.20 USD</strong></p>
+      <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Processing…" : "Pay with MicroWallet"}</button>{" "}
+      <button type="button" onClick={runDemoPurchases} disabled={busy || !buyer || !seller}>{busy ? "Processing…" : "Run 3 demo purchases"}</button>{" "}
+      <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>{paypalBusy ? "Processing…" : "Add funds with PayPal Sandbox"}</button>
+      <p>Small purchases use the MicroWallet balance. PayPal Sandbox is used to add funds to the wallet, rather than processing every small purchase separately.</p>
       {paypalStatus && <p role="status">{paypalStatus}</p>}
     </div>
 
     {state?.summary && <div className="settlement-summary" id="aggregation" aria-label="Aggregation summary">
-      <p className="stage-label">Step 5 · Recorded aggregation</p>
-      <h3>Internal purchases vs. PayPal funding</h3>
-      <p>Internal micro-purchases (N): {state.summary.micro_purchase_count}</p>
-      <p>Real PayPal funding transactions (M): {state.summary.real_paypal_payment_count}</p>
-      <p>{state.summary.micro_purchase_count > state.summary.real_paypal_payment_count ? "N > M: multiple internal purchases are aggregated without a PayPal transaction per purchase." : "Each internal purchase avoids a separate PayPal transaction. Complete multiple MicroWallet purchases to see N exceed M."}</p>
-      <p>Internal volume: {state.summary.internal_volume.toFixed(2)} USD</p>
-      <p>Average micro-purchase: {state.summary.average_micro_purchase.toFixed(2)} USD</p>
-      <p>Seller pending balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
+      <p className="stage-label">Step 5 · Aggregation</p>
+      <h3>Many small purchases, fewer external payments</h3>
+      <p>MicroWallet purchases: <strong>{state.summary.micro_purchase_count}</strong></p>
+      <p>PayPal funding transactions: <strong>{state.summary.real_paypal_payment_count}</strong></p>
+      <p>{state.summary.micro_purchase_count > state.summary.real_paypal_payment_count ? "Multiple small purchases have been completed using fewer external funding transactions." : "Run several MicroWallet purchases to see the aggregation effect."}</p>
+      <p>Total purchase volume: {state.summary.internal_volume.toFixed(2)} USD</p>
+      <p>Average purchase: {state.summary.average_micro_purchase.toFixed(2)} USD</p>
+      <p>Seller balance: {state.summary.seller_pending_balance.toFixed(2)} USD</p>
     </div>}
 
     {demoError && <div className="notice" role="alert">
       <p>{demoError.message}</p>
-      {demoError.source === "history" && <button type="button" onClick={retryRefresh} disabled={busy || paypalBusy}>Retry wallet history</button>}
+      {demoError.source === "history" && <button type="button" onClick={retryRefresh} disabled={busy || paypalBusy}>Retry</button>}
       {demoError.source === "purchase" && <button type="button" onClick={pay} disabled={busy}>Retry purchase</button>}
       {demoError.source === "demo-purchases" && <button type="button" onClick={runDemoPurchases} disabled={busy}>Retry remaining purchases</button>}
-      {demoError.source === "paypal-order" && <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>Retry PayPal setup</button>}
+      {demoError.source === "paypal-order" && <button type="button" onClick={startPaypalFunding} disabled={paypalBusy}>Retry PayPal</button>}
       {demoError.source === "paypal-capture" && <button type="button" onClick={retryPaypalCapture} disabled={paypalBusy}>Retry PayPal verification</button>}{" "}
       <button type="button" onClick={() => setDemoError(null)}>Dismiss</button>
     </div>}
     {receipt && <div className="receipt" role="status">
-      <h3>Internal settlement complete</h3>
-      <p>Reference: {receipt.reference}{receipt.duplicate ? " (idempotent retry)" : ""}</p>
+      <h3>Purchase complete</h3>
       <p>Amount: {money(receipt.amountMinor, receipt.currency)}</p>
-      <p>Buyer balance after: {money(receipt.buyerBalanceMinor, receipt.currency)}</p>
-      <p>Seller balance after: {money(receipt.sellerBalanceMinor, receipt.currency)}</p>
-      <p><strong>Internal MicroWallet transaction — no PayPal transaction created</strong></p>
+      <p>Buyer balance: {money(receipt.buyerBalanceMinor, receipt.currency)}</p>
+      <p>Seller balance: {money(receipt.sellerBalanceMinor, receipt.currency)}</p>
+      <p>Reference: {receipt.reference}</p>
     </div>}
 
-    <h3>Internal ledger</h3>
-    <p>Each entry records the service, internal purchase and wallet references, buyer debit, seller credit, and timestamp. PayPal funding references are listed separately because funding is recorded at wallet level, not linked to an individual purchase.</p>
+    <h3>Activity</h3>
+    <p>Recent MicroWallet purchases are shown here for the demo.</p>
     {state?.ledger.length ? <ol>{state.ledger.map(entry => <li key={entry.reference}>
-      <strong>{entry.productService}</strong> — internal purchase reference {entry.reference}; buyer wallet {entry.buyerWalletId}; seller wallet {entry.sellerWalletId}; buyer debit {money(entry.amountMinor, entry.currency)}; seller credit {money(entry.amountMinor, entry.currency)}; buyer balance after {money(entry.buyerBalanceAfter, entry.currency)}, seller balance after {money(entry.sellerBalanceAfter, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}. PayPal funding references are shown separately below when recorded.
-    </li>)}</ol> : <p>{state ? "No internal settlements recorded yet. Complete a MicroWallet checkout to create the first ledger entry." : "Ledger is unavailable until wallet history loads."}</p>}
+      <strong>{entry.productService}</strong> — {money(entry.amountMinor, entry.currency)}; {new Date(entry.createdAt).toLocaleString()}; reference {entry.reference}
+    </li>)}</ol> : <p>{state ? "No purchases yet. Complete a MicroWallet checkout to create the first activity record." : "Activity is unavailable until the wallet loads."}</p>}
 
-    <h3>PayPal funding references</h3>
+    <h3>PayPal Sandbox funding</h3>
     {state?.fundings?.length ? <ol>{state.fundings.map(funding => <li key={funding.captureId}>
-      <strong>External PayPal Sandbox funding</strong> — {money(funding.amountMinor, funding.currency)}; order {funding.orderId}; capture {funding.captureId}; {new Date(funding.createdAt).toLocaleString()}
-    </li>)}</ol> : <p>{state ? "No verified PayPal funding has been recorded yet." : "Funding history is unavailable until wallet history loads."}</p>}
+      <strong>{money(funding.amountMinor, funding.currency)}</strong> added to the wallet via PayPal Sandbox; {new Date(funding.createdAt).toLocaleString()}; reference {funding.captureId}
+    </li>)}</ol> : <p>{state ? "No PayPal Sandbox funding has been added yet." : "Funding history is unavailable until the wallet loads."}</p>}
   </section>;
 }
