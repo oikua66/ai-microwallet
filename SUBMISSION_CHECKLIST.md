@@ -1,38 +1,144 @@
-# Hackathon submission checklist
+# PayPal AI Hackathon 2026 — Submission Checklist
 
-Evidence state as of 2026-10-23. Do not mark a remaining item complete without evidence.
+Evidence state as of **2026-10-25**. Only mark an item complete when it has been verified.
 
-## Repository and release
-- [x] Public repository confirmed: `oikua66/ai-microwallet`.
-- [x] Tracked-file release/security audit completed for the H-009 repository state. No committed real PayPal, OpenAI, Supabase, GitHub, private-key, or similar credential material was found in the reviewed tracked files. `.env.example` contains blank placeholders only; server code reads secrets from environment variables.
-- [x] Exact-head independent verification for H-009 completed: SQL/database verification and production build passed on the task HEAD through the separate Orchestrator verifier; Vercel preview is READY.
-- [x] H-008 integrated product implementation passed MASTER and is on `main` at `96248fa593421b1ee498b661ce771ca22b51e4c0`; the corresponding Vercel production deployment is READY.
-- [ ] Verify unauthenticated judge access to the public demo. Vercel production alias discovered: `https://ai-microwallet.vercel.app/`. Current project configuration has Vercel Authentication enabled for deployments except custom domains, and no separate custom domain has been confirmed. Do not advertise this as a public demo until access is opened or a public custom domain is verified.
-- [x] Product claims aligned with the shipped prototype: AI provides constrained advice, deterministic code controls internal wallet/ledger state, and PayPal Sandbox provides external funding. No banking/EMI status, PayPal replacement, production PayPal payments, or external seller payout is claimed.
+## 1. Repository and licensing
+- [x] Public repository: `https://github.com/oikua66/ai-microwallet`.
+- [x] `LICENSE` file exists in the repository root.
+- [x] Repository license is MIT.
+- [ ] Verify that GitHub visibly recognizes/displays the MIT license on the repository page.
+- [x] `.env.example` contains placeholders only; secrets are read from environment variables.
+- [x] README and submission documentation are present.
 
-## Security evidence reviewed
-- [x] `.env.example` uses blank credential placeholders.
-- [x] PayPal integration reads client ID/secret from server environment variables; no hardcoded PayPal credential found in the reviewed source.
-- [x] OpenAI integration reads `OPENAI_API_KEY` from the server environment; no hardcoded OpenAI key found in the reviewed source.
-- [x] Supabase privileged access reads `SUPABASE_SERVICE_ROLE_KEY` from the server environment; no hardcoded service-role credential found in the reviewed source.
-- [x] GitHub verifier uses the runtime-provided `GITHUB_TOKEN` secret reference rather than a committed token.
-- [x] No tracked private-key file or private-key block was found in the reviewed repository tree/pattern audit.
+## 2. Public working demo
+- [x] Production URL: `https://ai-microwallet.vercel.app/`.
+- [x] Unauthenticated access verified in an incognito browser.
+- [x] Production Next.js build passes.
+- [x] Main demo page loads successfully.
+- [x] `/privacy` loads successfully.
+- [x] `/terms` loads successfully.
 
-## Demo assets
-- [ ] Record screenshots of the recommendation, buyer wallet, PayPal Sandbox funding confirmation, internal ledger, seller wallet, and N-versus-M aggregation result. Label synthetic/demo content.
-- [ ] Record and review the product video against [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md); finished runtime must be 2:00–2:30.
-- [ ] Add final screenshot/video asset links and verify that judges can open them.
+## 3. OpenAI integration
+- [x] OpenAI production path verified with the deployed API key.
+- [x] AI opportunity analysis works from the public demo.
+- [x] AI output is advisory only and cannot directly mutate wallet balances.
+- [x] Temporary AI health probe removed from the current repository state.
 
-## Hackathon submission fields
-- [ ] Project title and concise description.
-- [ ] Team/member names and contact details required by the submission form.
-- [x] Public repository URL: `https://github.com/oikua66/ai-microwallet`.
-- [ ] Live demo URL: use `https://ai-microwallet.vercel.app/` only after unauthenticated access is verified, or replace it with a verified public custom domain.
-- [ ] Product video URL and screenshots/assets.
-- [x] Technology stack and accurate AI/PayPal integration description prepared in README.
-- [ ] Any required track, category, challenge, or sponsor fields.
-- [ ] Confirm submission deadline and submitter-owned form requirements.
+## 4. MicroWallet purchase flow
+- [x] Buyer demo wallet loads.
+- [x] Seller demo wallet loads.
+- [x] Single MicroWallet purchase works.
+- [x] Three-purchase demo works.
+- [x] Buyer balance decreases correctly.
+- [x] Seller balance increases correctly.
+- [x] Purchase activity records are displayed.
+- [x] Aggregation metrics update correctly.
 
-## Final MASTER gate
+## 5. PayPal Sandbox
+- [x] PayPal Sandbox order creation works.
+- [x] Buyer Sandbox approval works.
+- [x] Return to AI MicroWallet works.
+- [x] Server-side capture verification works.
+- [x] Verified funding reference is displayed.
+- [x] Buyer wallet balance increases after Sandbox funding.
+- [x] PayPal return query parameters are cleaned from the URL.
+- [x] End-to-end proof observed: multiple MicroWallet purchases with fewer PayPal funding transactions.
 
-The code/build/security-documentation portion is ready for another exact-head verification after these H-009 documentation updates. The remaining genuine owner-controlled release blocker is public judge access: either allow unauthenticated access to the Vercel production demo for the hackathon or provide/attach a public custom domain. This checklist does not authorize changing deployment access controls.
+## 6. Public legal and product positioning
+- [x] Footer identifies the site as a hackathon demo.
+- [x] Footer states `No real-money service`.
+- [x] Footer states `PayPal Sandbox only`.
+- [x] Privacy Policy published.
+- [x] Terms & Demo Disclaimer published.
+- [x] Terms clarify that the demo is not a bank, EMI, payment institution, money transmitter, or custodial wallet.
+- [x] Terms clarify that PayPal activity is Sandbox test activity.
+- [x] Intellectual Property section added.
+- [x] Original project ownership is described subject to the repository license and Hackathon Official Rules.
+
+## 7. Judge-facing UX
+- [x] Step 1 — AI opportunity scan uses judge-friendly wording.
+- [x] Step 2 — Buyer wallet is presented separately.
+- [x] Step 3 — Seller wallet is presented separately.
+- [x] Step 4 — Merchant checkout wording is simplified.
+- [x] Step 5 — Aggregation wording is simplified.
+- [x] Internal engineering IDs are removed from normal wallet UI where unnecessary.
+- [x] Hero/navigation wording is simplified.
+- [x] PayPal Sandbox is presented as wallet funding rather than one external payment per micro-purchase.
+
+## 8. Screenshots
+- [ ] Hero / Step 1 screenshot.
+- [ ] Buyer wallet screenshot.
+- [ ] Seller wallet after purchases screenshot.
+- [ ] Merchant checkout screenshot.
+- [ ] Aggregation screenshot showing multiple MicroWallet purchases and fewer PayPal funding transactions.
+- [ ] PayPal Sandbox funding confirmation screenshot.
+- [ ] Activity / funding reference screenshot.
+- [ ] Review screenshots for accidental secrets, unwanted query parameters, browser identifiers, or irrelevant UI.
+- [ ] Select final screenshots for the Devpost submission.
+
+## 9. Product video
+Current target runtime: approximately **2:20**, with the final video kept below the official maximum.
+
+- [ ] Update `DEMO_SCRIPT.md` to match the current public UX and terminology.
+- [ ] Record the final product walkthrough.
+- [ ] Show AI opportunity analysis.
+- [ ] Show buyer and seller wallet behavior.
+- [ ] Show three MicroWallet purchases.
+- [ ] Show PayPal Sandbox funding.
+- [ ] Show aggregation result.
+- [ ] Show live demo URL and repository.
+- [ ] Ensure no secrets or real credentials appear.
+- [ ] Confirm final runtime is below 3:00.
+- [ ] Upload the video publicly to YouTube.
+- [ ] Verify that the YouTube link works without authentication.
+
+## 10. Devpost submission fields
+- [ ] Final project title.
+- [ ] Short project description.
+- [ ] Full project description / problem / solution / build story.
+- [ ] Explain how OpenAI is used.
+- [ ] Explain how PayPal Sandbox is used.
+- [x] Public GitHub repository URL prepared.
+- [x] Public live demo URL prepared and unauthenticated access verified.
+- [ ] Public YouTube demo URL.
+- [ ] Final screenshots/assets.
+- [ ] Team/member name(s).
+- [ ] Required contact information.
+- [ ] Technology stack.
+- [ ] Required challenge / track / category selections.
+- [ ] Any sponsor-specific fields.
+- [ ] Review all submission claims against the actually shipped functionality.
+- [ ] Confirm the official deadline and any final form-specific requirements.
+
+## 11. Final MASTER walkthrough
+Before submission:
+
+- [ ] Open the public demo in a fresh incognito session.
+- [ ] Run AI opportunity analysis.
+- [ ] Confirm buyer wallet loads.
+- [ ] Run three demo purchases.
+- [ ] Confirm seller balance and purchase count.
+- [ ] Complete one PayPal Sandbox funding flow.
+- [ ] Confirm buyer balance increases.
+- [ ] Confirm aggregation shows multiple MicroWallet purchases against fewer funding transactions.
+- [ ] Confirm Activity and PayPal funding reference are visible.
+- [ ] Open Privacy Policy.
+- [ ] Open Terms & Demo Disclaimer.
+- [ ] Verify repository is public.
+- [ ] Verify MIT license is visibly recognized by GitHub.
+- [ ] Verify YouTube video is public.
+- [ ] Verify all Devpost links from a logged-out/incognito browser.
+- [ ] Submit before the official deadline.
+
+## Current blockers
+
+The public application and main technical demo flow have passed production verification.
+
+Remaining submission work:
+
+1. verify visible GitHub MIT license recognition;
+2. prepare final screenshots;
+3. update and record the demo video;
+4. upload the video to YouTube;
+5. complete Devpost submission fields;
+6. perform the final MASTER walkthrough.
