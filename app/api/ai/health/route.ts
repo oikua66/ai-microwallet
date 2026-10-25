@@ -20,7 +20,7 @@ export async function GET() {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         input: "Reply with exactly OK",
-        max_output_tokens: 8,
+        max_output_tokens: 64,
       }),
     });
 
