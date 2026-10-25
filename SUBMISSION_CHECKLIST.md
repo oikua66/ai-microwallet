@@ -1,6 +1,10 @@
 # PayPal AI Hackathon 2026 — Submission Checklist
 
-Evidence state as of **2026-10-25**. Only mark an item complete when it has been verified.
+## FINAL STATUS: SUBMITTED
+
+Submitted to Devpost on **2026-10-25**.
+
+The public demo, repository, license, screenshots, product video, YouTube access, Devpost fields, and submission flow were completed and verified before submission.
 
 ## 1. Repository and licensing
 - [x] Public repository: `https://github.com/oikua66/ai-microwallet`.
@@ -65,84 +69,66 @@ Evidence state as of **2026-10-25**. Only mark an item complete when it has been
 - [x] Hero/navigation wording is simplified.
 - [x] PayPal Sandbox is presented as wallet funding rather than one external payment per micro-purchase.
 - [x] Production model is explicitly separated from the Sandbox demo.
-- [x] Production model explains one-time device authorization, configurable spending limits, automatic micro-purchases inside those limits, and step-up re-authentication only for exceptions such as exceeded limits, device changes, or risk triggers.
+- [x] Production model explains one-time device authorization, configurable spending limits, automatic micro-purchases inside those limits, and step-up re-authentication only for exceptions.
 
 ## 8. Screenshots
+- [x] Final Devpost gallery prepared in 3:2 format.
 - [x] Hero / Step 1 screenshot.
-- [x] Buyer wallet screenshot.
-- [x] Seller wallet after purchases screenshot.
+- [x] Buyer + seller wallet screenshot.
 - [x] Merchant checkout screenshot.
-- [x] Aggregation screenshot showing multiple MicroWallet purchases and fewer PayPal funding transactions.
-- [x] PayPal Sandbox funding confirmation screenshot.
-- [x] Activity / funding reference screenshot.
-- [x] Screenshots reviewed for accidental secrets, unwanted query parameters, browser identifiers, and irrelevant UI.
-- [x] Final Devpost screenshot set selected: hero; buyer + seller wallets; merchant checkout; aggregation; activity + PayPal Sandbox funding.
+- [x] Aggregation screenshot.
+- [x] Activity + PayPal Sandbox funding screenshot.
+- [x] Screenshots reviewed for accidental secrets and irrelevant browser UI.
+- [x] Final images uploaded to Devpost.
 
 ## 9. Product video
-Current target runtime: approximately **2:20**, with the final video kept below the official maximum.
-
-- [x] `DEMO_SCRIPT.md` updated to match the current public UX and terminology.
-- [x] Video script includes a short production-model explanation: authorize the device once, set limits, allow micro-purchases inside those limits without repeated login/payment approval, and require step-up authentication only when needed.
-- [ ] Record the final product walkthrough.
-- [ ] Show AI opportunity analysis.
-- [ ] Show buyer and seller wallet behavior.
-- [ ] Show three MicroWallet purchases.
-- [ ] Show PayPal Sandbox funding.
-- [ ] Show aggregation result.
-- [ ] Show the Production model block and explain why repeated login is not the intended everyday production flow.
-- [ ] Show live demo URL and repository.
-- [ ] Ensure no secrets or real credentials appear.
-- [ ] Confirm final runtime is below 3:00.
-- [ ] Upload the video publicly to YouTube.
-- [ ] Verify that the YouTube link works without authentication.
+- [x] Voiceover script prepared and recorded with NOVALEX Voice.
+- [x] Video rebuilt with static frames and no zoom/pan camera movement.
+- [x] Final end card added.
+- [x] Final runtime verified below 3 minutes (approximately 2:56).
+- [x] Video includes the problem, product idea, AI role, buyer/seller wallets, small purchases, aggregation, PayPal Sandbox funding, production model, and final summary.
+- [x] Video uploaded to YouTube.
+- [x] YouTube visibility set to unlisted / access by link.
+- [x] Anonymous access to the YouTube video verified.
+- [x] YouTube demo attached to the Devpost submission.
 
 ## 10. Devpost submission fields
-- [ ] Final project title.
-- [ ] Short project description.
-- [ ] Full project description / problem / solution / build story.
-- [ ] Explain how OpenAI is used.
-- [ ] Explain how PayPal Sandbox is used.
-- [ ] Explain the intended production authorization model without claiming it is implemented in the hackathon prototype.
-- [x] Public GitHub repository URL prepared.
-- [x] Public live demo URL prepared and unauthenticated access verified.
-- [ ] Public YouTube demo URL.
-- [x] Final screenshots/assets selected.
-- [ ] Team/member name(s).
-- [ ] Required contact information.
-- [ ] Technology stack.
-- [ ] Required challenge / track / category selections.
-- [ ] Any sponsor-specific fields.
-- [ ] Review all submission claims against the actually shipped functionality.
-- [ ] Confirm the official deadline and any final form-specific requirements.
+- [x] Project title: `AI MicroWallet`.
+- [x] Short product description completed.
+- [x] Full Inspiration / What it does / How we built it / Challenges / Accomplishments / What we learned / What's next description completed.
+- [x] OpenAI usage explained accurately.
+- [x] PayPal Sandbox usage explained accurately.
+- [x] Intended production authorization model explained without claiming it is implemented in the hackathon prototype.
+- [x] Public GitHub repository URL supplied.
+- [x] Public live demo URL supplied.
+- [x] YouTube demo supplied.
+- [x] Final screenshots uploaded.
+- [x] Technology stack supplied.
+- [x] AI tools used during development disclosed: ChatGPT, OpenAI API, and the project's own AI project orchestrator workflow.
+- [x] PayPal integration feedback completed.
+- [x] Learning / AI-career-value questions completed.
+- [x] Submitter information and required declarations completed.
 
-## 11. Final MASTER walkthrough
-Before submission:
+## 11. Final verification and submission
+- [x] Public demo verified without authentication.
+- [x] AI opportunity analysis verified.
+- [x] Buyer and seller MicroWallet behavior verified.
+- [x] Three-purchase aggregation scenario verified.
+- [x] PayPal Sandbox funding flow verified.
+- [x] Activity and funding references verified.
+- [x] Production model clearly labeled as intended future production flow.
+- [x] Privacy Policy and Terms published.
+- [x] Repository public.
+- [x] MIT license recognized by GitHub.
+- [x] YouTube demo accessible anonymously.
+- [x] Devpost accepted the final submission.
 
-- [ ] Open the public demo in a fresh incognito session.
-- [ ] Run AI opportunity analysis.
-- [ ] Confirm buyer wallet loads.
-- [ ] Run three demo purchases.
-- [ ] Confirm seller balance and purchase count.
-- [ ] Complete one PayPal Sandbox funding flow.
-- [ ] Confirm buyer balance increases.
-- [ ] Confirm aggregation shows multiple MicroWallet purchases against fewer funding transactions.
-- [ ] Confirm Activity and PayPal funding reference are visible.
-- [ ] Confirm Production model block is visible and clearly labeled as the intended production flow rather than a shipped prototype feature.
-- [ ] Open Privacy Policy.
-- [ ] Open Terms & Demo Disclaimer.
-- [ ] Verify repository is public.
-- [x] Verify MIT license is visibly recognized by GitHub.
-- [ ] Verify YouTube video is public.
-- [ ] Verify all Devpost links from a logged-out/incognito browser.
-- [ ] Submit before the official deadline.
+## Submission record
 
-## Current blockers
-
-The public application, main technical demo flow, licensing check, final screenshot set, and production-model explanation have passed verification.
-
-Remaining submission work:
-
-1. record the final demo video;
-2. upload the video to YouTube;
-3. complete Devpost submission fields;
-4. perform the final MASTER walkthrough.
+- Project: **AI MicroWallet**
+- Hackathon: **PayPal AI Hackathon 2026**
+- Submission platform: **Devpost**
+- Submission date: **2026-10-25**
+- Live demo: `https://ai-microwallet.vercel.app/`
+- Source: `https://github.com/oikua66/ai-microwallet`
+- Status: **SUBMITTED — awaiting judging/results**
