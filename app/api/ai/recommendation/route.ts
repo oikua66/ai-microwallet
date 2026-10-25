@@ -4,6 +4,17 @@ import { validateHistory, validateOpportunityRecommendation } from "@/app/lib/ai
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function deterministicFallback(history: ReturnType<typeof validateHistory>) {
+  const matching = history.filter(item => item.type === "purchase" && item.amountMinor <= 200).length;
+  const recommendation = validateOpportunityRecommendation(history, {
+    recommend_microwallet: matching >= 3,
+    matching_transactions: matching,
+    recommended_topup_minor: matching >= 3 ? 500 : 0,
+    reason: "Deterministic fallback based on the same bounded opportunity policy.",
+  });
+  return { ...recommendation, source: "deterministic_fallback" as const };
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -25,7 +36,9 @@ export async function POST(request: Request) {
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: "AI recommendations are not configured." }, { status: 503 });
+  if (!apiKey) {
+    return NextResponse.json(deterministicFallback(history), { headers: { "Cache-Control": "no-store" } });
+  }
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -67,8 +80,8 @@ export async function POST(request: Request) {
     const content = payload?.choices?.[0]?.message?.content;
     if (typeof content !== "string") throw new Error("Malformed AI response.");
     const recommendation = validateOpportunityRecommendation(history, JSON.parse(content));
-    return NextResponse.json(recommendation, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ ...recommendation, source: "openai" as const }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "A safe recommendation could not be produced. No financial action was taken." }, { status: 502 });
+    return NextResponse.json(deterministicFallback(history), { headers: { "Cache-Control": "no-store" } });
   }
 }
