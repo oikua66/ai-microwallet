@@ -64,6 +64,8 @@ Evidence state as of **2026-10-25**. Only mark an item complete when it has been
 - [x] Internal engineering IDs are removed from normal wallet UI where unnecessary.
 - [x] Hero/navigation wording is simplified.
 - [x] PayPal Sandbox is presented as wallet funding rather than one external payment per micro-purchase.
+- [x] Production model is explicitly separated from the Sandbox demo.
+- [x] Production model explains one-time device authorization, configurable spending limits, automatic micro-purchases inside those limits, and step-up re-authentication only for exceptions such as exceeded limits, device changes, or risk triggers.
 
 ## 8. Screenshots
 - [x] Hero / Step 1 screenshot.
@@ -79,13 +81,15 @@ Evidence state as of **2026-10-25**. Only mark an item complete when it has been
 ## 9. Product video
 Current target runtime: approximately **2:20**, with the final video kept below the official maximum.
 
-- [ ] Update `DEMO_SCRIPT.md` to match the current public UX and terminology.
+- [x] `DEMO_SCRIPT.md` updated to match the current public UX and terminology.
+- [x] Video script includes a short production-model explanation: authorize the device once, set limits, allow micro-purchases inside those limits without repeated login/payment approval, and require step-up authentication only when needed.
 - [ ] Record the final product walkthrough.
 - [ ] Show AI opportunity analysis.
 - [ ] Show buyer and seller wallet behavior.
 - [ ] Show three MicroWallet purchases.
 - [ ] Show PayPal Sandbox funding.
 - [ ] Show aggregation result.
+- [ ] Show the Production model block and explain why repeated login is not the intended everyday production flow.
 - [ ] Show live demo URL and repository.
 - [ ] Ensure no secrets or real credentials appear.
 - [ ] Confirm final runtime is below 3:00.
@@ -98,6 +102,7 @@ Current target runtime: approximately **2:20**, with the final video kept below 
 - [ ] Full project description / problem / solution / build story.
 - [ ] Explain how OpenAI is used.
 - [ ] Explain how PayPal Sandbox is used.
+- [ ] Explain the intended production authorization model without claiming it is implemented in the hackathon prototype.
 - [x] Public GitHub repository URL prepared.
 - [x] Public live demo URL prepared and unauthenticated access verified.
 - [ ] Public YouTube demo URL.
@@ -122,6 +127,7 @@ Before submission:
 - [ ] Confirm buyer balance increases.
 - [ ] Confirm aggregation shows multiple MicroWallet purchases against fewer funding transactions.
 - [ ] Confirm Activity and PayPal funding reference are visible.
+- [ ] Confirm Production model block is visible and clearly labeled as the intended production flow rather than a shipped prototype feature.
 - [ ] Open Privacy Policy.
 - [ ] Open Terms & Demo Disclaimer.
 - [ ] Verify repository is public.
@@ -132,11 +138,11 @@ Before submission:
 
 ## Current blockers
 
-The public application, main technical demo flow, licensing check, and final screenshot set have passed verification.
+The public application, main technical demo flow, licensing check, final screenshot set, and production-model explanation have passed verification.
 
 Remaining submission work:
 
-1. update and record the demo video;
+1. record the final demo video;
 2. upload the video to YouTube;
 3. complete Devpost submission fields;
 4. perform the final MASTER walkthrough.
