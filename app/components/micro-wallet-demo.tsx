@@ -42,6 +42,7 @@ export default function MicroWalletDemo() {
       const url = new URL(window.location.href);
       url.searchParams.delete("paypal");
       url.searchParams.delete("token");
+      url.searchParams.delete("PayerID");
       window.history.replaceState({}, "", url);
     };
     async function handlePaypalReturn() {
