@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
+import { BUYER_ID, SELLER_ID, readFallbackState, settleFallback, writeFallbackState } from "@/app/lib/demo-wallet-fallback";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const BUYER = "00000000-0000-4000-8000-000000000001";
-const SELLER = "00000000-0000-4000-8000-000000000002";
 
 async function rpc(name: string, body: Record<string, unknown>) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,20 +22,24 @@ async function rpc(name: string, body: Record<string, unknown>) {
   return result;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const state = await rpc("micro_wallet_demo_state", {});
     if (state && typeof state === "object" && Array.isArray(state.ledger)) {
       const ledger = state.ledger.map((entry: Record<string, unknown>) => ({
+        productService: "Demo digital service",
         ...entry,
-        buyerWalletId: BUYER,
-        sellerWalletId: SELLER,
+        buyerWalletId: BUYER_ID,
+        sellerWalletId: SELLER_ID,
       }));
       return NextResponse.json({ ...state, ledger }, { headers: { "Cache-Control": "no-store" } });
     }
     return NextResponse.json(state, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "MicroWallet history is unavailable. Check server-side Supabase configuration and migration." }, { status: 503 });
+    const state = readFallbackState(request);
+    const response = NextResponse.json(state, { headers: { "Cache-Control": "no-store", "X-MicroWallet-Storage": "browser-fallback" } });
+    writeFallbackState(response, state);
+    return response;
   }
 }
 
@@ -53,10 +55,11 @@ export async function POST(request: Request) {
       typeof idempotencyKey !== "string" || !/^[0-9a-f-]{36}$/i.test(idempotencyKey)) {
     return NextResponse.json({ error: "Enter a positive whole-cent USD amount and a valid request key." }, { status: 400 });
   }
+
   try {
     const result = await rpc("settle_micro_purchase", {
-      p_buyer_wallet_id: BUYER,
-      p_seller_wallet_id: SELLER,
+      p_buyer_wallet_id: BUYER_ID,
+      p_seller_wallet_id: SELLER_ID,
       p_amount_minor: amountMinor,
       p_currency: currency,
       p_idempotency_key: idempotencyKey,
@@ -64,12 +67,21 @@ export async function POST(request: Request) {
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    const known = ["Insufficient balance", "Unknown wallet", "Unsupported currency", "Wallet currency mismatch",
-      "Invalid wallet roles", "Buyer and seller must be distinct wallets", "Idempotency key was already used for a different settlement",
+    const businessErrors = ["Insufficient balance", "Unsupported currency", "Idempotency key was already used for a different settlement",
       "Amount must be a positive integer minor-unit value", "Balance limit exceeded", "Invalid idempotency key"];
-    if (known.some(item => message.includes(item))) {
-      return NextResponse.json({ error: known.find(item => message.includes(item)) }, { status: 409 });
+    if (businessErrors.some(item => message.includes(item))) {
+      return NextResponse.json({ error: businessErrors.find(item => message.includes(item)) }, { status: 409 });
     }
-    return NextResponse.json({ error: "Settlement could not be completed. No balance or ledger change was committed." }, { status: 503 });
+  }
+
+  try {
+    const current = readFallbackState(request);
+    const { state, receipt } = settleFallback(current, amountMinor as number, idempotencyKey as string);
+    const response = NextResponse.json(receipt, { headers: { "Cache-Control": "no-store", "X-MicroWallet-Storage": "browser-fallback" } });
+    writeFallbackState(response, state);
+    return response;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Settlement could not be completed.";
+    return NextResponse.json({ error: message.includes("Insufficient balance") ? "Insufficient balance" : "Settlement could not be completed. No balance or ledger change was committed." }, { status: message.includes("Insufficient balance") ? 409 : 503 });
   }
 }
