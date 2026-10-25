@@ -1,57 +1,132 @@
 # AI MicroWallet
 
-AI MicroWallet is a PayPal AI Hackathon 2026 prototype for reducing payment friction around very small purchases by combining three separate responsibilities:
+AI MicroWallet is a PayPal AI Hackathon 2026 prototype that demonstrates how repeated low-value digital purchases can be handled through a reusable MicroWallet balance while PayPal Sandbox is used for external wallet funding.
 
-**AI finds where aggregation makes sense. MicroWallet settles the micro-purchases. PayPal moves the real money.**
+**AI identifies suitable payment patterns. Application code controls wallet balances and purchases. PayPal Sandbox demonstrates the external funding step.**
 
-The architecture deliberately keeps those roles separate: AI recommends, deterministic code controls wallet balances and the internal ledger, and PayPal Sandbox handles external funding.
+Live demo: https://ai-microwallet.vercel.app/
 
-## Verified prototype status
+## What the demo shows
 
-The current product path includes:
+The current public demo includes:
 
-- an OpenAI-backed recommendation flow that analyzes synthetic/approved transaction history and returns constrained advice;
-- a persistent buyer and seller MicroWallet backed by Supabase/PostgreSQL;
-- atomic internal micro-purchase settlement with recorded product/service, wallet references, balances, and timestamps;
-- a PayPal Sandbox top-up flow with server-side order creation, approval, capture verification, and recorded funding reference;
-- an aggregation view comparing internal micro-purchases (`N`) with real PayPal Sandbox funding transactions (`M`);
-- a demo path that can create three internal purchases to make the `N > M` aggregation story visible;
-- non-technical browser error handling that does not expose raw API diagnostics.
+- an OpenAI-backed opportunity scan that evaluates a sample low-value purchase pattern;
+- a reusable buyer MicroWallet balance;
+- a seller MicroWallet that accumulates proceeds from small purchases;
+- deterministic internal purchase settlement;
+- PayPal Sandbox wallet funding with server-side order creation and capture verification;
+- an aggregation view comparing MicroWallet purchases with PayPal funding transactions;
+- an activity history with purchase references;
+- Privacy Policy and Terms & Demo Disclaimer pages.
 
-H-008 passed independent MASTER review on commit `96248fa593421b1ee498b661ce771ca22b51e4c0` after exact-head focused tests, disposable PostgreSQL/SQL verification, a production build, and Vercel verification. That commit is on `main` and has a READY production deployment.
+The judge-facing flow has been manually verified in production, including:
 
-This is still a hackathon prototype. It does **not** claim banking or EMI status, does not replace PayPal, and does not implement an external seller payout rail. PayPal usage is Sandbox, not production payments.
+1. OpenAI recommendation;
+2. three MicroWallet purchases;
+3. seller balance accumulation;
+4. PayPal Sandbox approval and capture;
+5. buyer wallet funding;
+6. aggregation showing multiple MicroWallet purchases behind fewer external funding transactions.
 
-## Stack
+The public Vercel deployment has also been verified without authentication in an incognito browser session.
 
-- Next.js / TypeScript / Node.js
-- Vercel
-- Supabase / PostgreSQL
-- OpenAI API
-- PayPal Developer Sandbox
+## Core idea
 
-## Architecture
+Very small purchases can be inefficient if every purchase requires its own external payment flow.
+
+AI MicroWallet separates three responsibilities:
 
 ```text
-Synthetic/approved transaction history
+Sample purchase pattern
         |
         v
-OpenAI recommendation API
+OpenAI opportunity analysis
         |
-        | advice only
+        | recommendation only
         v
-Buyer MicroWallet ---> internal atomic micro-purchase ---> Seller MicroWallet
-        ^                                                  |
-        |                                                  v
-PayPal Sandbox funding                           aggregation / ledger view
-(order -> buyer approval -> capture)
+Buyer MicroWallet ---> small purchase ---> Seller MicroWallet
+        ^
+        |
+PayPal Sandbox funding
 ```
 
 ### Responsibility boundary
 
-- **AI recommends.** The model identifies repeated low-value-payment opportunities. Its output is validated and cannot move money or mutate balances.
-- **Code controls balances.** Internal wallet debits, credits, idempotency, ledger records, and aggregation state are deterministic application/database logic.
-- **PayPal moves money.** The prototype uses PayPal Sandbox for external buyer funding. A PayPal transaction is not created for every internal micro-purchase.
+- **AI identifies opportunities.** The model analyzes the sample purchase pattern and recommends whether MicroWallet aggregation is a good fit.
+- **Application code controls balances.** Purchases, buyer debits, seller credits, references and aggregation metrics are handled by deterministic application logic.
+- **PayPal Sandbox demonstrates funding.** PayPal Sandbox is used to add test funds to the buyer wallet. It is not invoked for every individual MicroWallet purchase.
+
+AI does not authorize payments or directly mutate wallet balances.
+
+## Demo journey
+
+The public interface is organized into five steps:
+
+1. **AI opportunity** — analyze a sample low-value purchase pattern.
+2. **Buyer wallet** — show the reusable buyer balance.
+3. **Seller wallet** — show accumulated seller balance and purchase count.
+4. **Merchant checkout** — complete one or three demo purchases, or add wallet funds through PayPal Sandbox.
+5. **Aggregation** — compare MicroWallet purchase count with PayPal funding transaction count.
+
+A typical demonstration is:
+
+- start with the buyer demo balance;
+- run three purchases at `0.20 USD` each;
+- observe the buyer balance decrease and seller balance increase;
+- add `5.00 USD` using PayPal Sandbox;
+- return to the application and show the verified funding reference;
+- show that several MicroWallet purchases can be supported by fewer external funding transactions.
+
+## Demo status and limitations
+
+AI MicroWallet is a public hackathon prototype.
+
+It is **not**:
+
+- a bank;
+- an electronic money institution;
+- a payment institution;
+- a money transmitter;
+- a custodial real-money wallet;
+- a replacement for PayPal.
+
+PayPal functionality uses **PayPal Sandbox only**. Sandbox balances, approvals, captures and transaction references are test data and do not represent real customer funds.
+
+Buyer and seller wallet balances shown in the application are demonstration state.
+
+External seller payout is not implemented or claimed.
+
+## Stack
+
+- Next.js
+- TypeScript
+- Node.js
+- Vercel
+- OpenAI API
+- PayPal Developer Sandbox
+- Supabase / PostgreSQL support
+- server-side demo-state fallback for the public hackathon walkthrough
+
+## OpenAI integration
+
+The AI opportunity scan calls the OpenAI Responses API from the server.
+
+The production path has been verified successfully with the deployed `OPENAI_API_KEY`.
+
+The model recommendation is advisory only. It cannot move money or modify wallet balances.
+
+## PayPal Sandbox integration
+
+The PayPal flow includes:
+
+1. server-side order creation;
+2. buyer approval in PayPal Sandbox;
+3. return to AI MicroWallet;
+4. server-side capture verification;
+5. recording the verified funding reference;
+6. updating the demo buyer wallet balance.
+
+The production Sandbox flow has been manually verified end to end.
 
 ## Local development
 
@@ -66,9 +141,13 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open:
 
-Production build check:
+```text
+http://localhost:3000
+```
+
+Production build:
 
 ```bash
 npm run build
@@ -81,11 +160,11 @@ Health endpoint:
 GET /api/health
 ```
 
-## Environment setup
+## Environment variables
 
-`.env.example` contains blank placeholders only. Supply real credentials locally or through a trusted deployment secret manager; never commit them.
+`.env.example` contains blank placeholders only.
 
-Server-side configuration used by the prototype includes:
+The application may use:
 
 - `PAYPAL_CLIENT_ID`
 - `PAYPAL_CLIENT_SECRET`
@@ -95,33 +174,25 @@ Server-side configuration used by the prototype includes:
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-The PayPal client secret, OpenAI key, and Supabase service-role key must remain server-side. Do not place them in screenshots, video, browser output, or `NEXT_PUBLIC_` variables.
+Secrets must remain server-side and must not be committed to the repository or shown in screenshots/video.
 
-## Browser demo journey
+## Legal
 
-The intended judge-facing journey is:
+Public legal pages:
 
-1. Run the AI recommendation on synthetic transaction history.
-2. Show the buyer MicroWallet balance and persistent wallet state.
-3. Use PayPal Sandbox to top up the buyer wallet and show the verified funding reference.
-4. Complete one or more internal micro-purchases.
-5. Show the seller MicroWallet balance and internal ledger entries.
-6. Run three internal purchases and show the aggregation result so the distinction between internal purchases (`N`) and PayPal funding transactions (`M`) is visible.
+- https://ai-microwallet.vercel.app/privacy
+- https://ai-microwallet.vercel.app/terms
 
-The recommendation does not automatically execute a financial action. External seller payout is intentionally not claimed.
+The demo explicitly states that it is a hackathon prototype, not a real-money financial service, and that PayPal functionality uses Sandbox only.
 
-## Public demo status
-
-Vercel has a READY production deployment for the H-008 PASS commit and the project alias `https://ai-microwallet.vercel.app/` exists. At the time of the H-009 release audit, Vercel Authentication was enabled for deployments except custom domains and no separate custom domain had been confirmed for this project. Therefore unauthenticated judge access must be verified or enabled before the URL is presented as a public demo.
+The Terms page also records that ownership of the original AI MicroWallet intellectual property remains with its developer, subject to the repository's open-source license and the rights granted under the PayPal AI Hackathon Official Rules.
 
 ## Submission materials
 
-- [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) — 2:00–2:30 product-video script.
-- [`SUBMISSION_CHECKLIST.md`](SUBMISSION_CHECKLIST.md) — release, security, demo-access, asset, and submission-field checklist.
+- [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md)
+- [`SUBMISSION_CHECKLIST.md`](SUBMISSION_CHECKLIST.md)
 
-## Security / release notes
-
-The H-009 tracked-file audit found no committed real PayPal, OpenAI, Supabase, GitHub, private-key, or similar credential material in the reviewed repository state. `.env.example` contains blank placeholders, and application code reads secrets from environment variables. This audit does not authorize publishing deployment secrets and does not replace provider-side secret rotation if a credential is ever exposed.
+Remaining submission work is tracked in `SUBMISSION_CHECKLIST.md`.
 
 ## License
 
