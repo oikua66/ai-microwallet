@@ -205,13 +205,13 @@ export default function MicroWalletDemo() {
     <p>Seller accumulated balance: <strong>{seller ? money(seller.balanceMinor, seller.currency) : "—"}</strong></p>
     <p>Seller purchase count: <strong>{state ? state.summary.micro_purchase_count : "—"}</strong></p>
     <div id="seller" className="seller-state">
-      <p className="stage-label">Step 4 · Seller MicroWallet</p>
+      <p className="stage-label">Step 3 · Seller MicroWallet</p>
       <h3>Seller accumulation &amp; withdrawal state</h3>
       <p>Settlement state: accumulating internal credits. Withdrawal request: not requested. No external payout is executed or claimed.</p>
     </div>
 
     <div className="checkout-stage" id="checkout">
-      <p className="stage-label">Step 3 · Merchant checkout</p>
+      <p className="stage-label">Step 4 · Merchant checkout</p>
       <h3>Buy a demo digital service</h3>
       <p>Demo micro-purchase: <strong>0.20 USD</strong></p>
       <button type="button" onClick={pay} disabled={busy || !buyer || !seller}>{busy ? "Settling…" : "Pay with MicroWallet"}</button>{" "}
