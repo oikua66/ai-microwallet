@@ -55,24 +55,21 @@ export default function AIRecommendationDemo() {
   }
 
   return <section className="stage advice-stage" id="opportunity" aria-label="AI MicroWallet opportunity">
-    <p className="stage-label">Step 1 · AI advice only</p>
+    <p className="stage-label">Step 1 · AI opportunity scan</p>
     <h2>Spot the low-value payment pattern</h2>
-    <p>Demo evidence: five repeated purchases from digital services, totaling 1.45 USD (0.15–0.45 USD each). Ask AI to assess whether aggregation is useful; deterministic policy and wallet code remain in control.</p>
+    <p>Five small digital purchases total 1.45 USD. Ask AI whether this pattern is a good fit for a MicroWallet.</p>
     <details><summary>Show the sample transaction history</summary>
     <ul>{transactions.map((item, index) => <li key={index}>{item.merchant} — {minorMoney(item.amountMinor)}</li>)}</ul>
     </details>
     <button type="button" className="action-button" onClick={analyze} disabled={busy}>{busy ? "Analyzing…" : "Analyze payment pattern"}</button>
-    <p>AI recommendation is advice only. Deterministic code validates matching counts and allowed top-up bounds. This step does not change a balance or move PayPal funds.</p>
     {error && <p className="notice" role="alert">{error}</p>}
     {result && <div className="receipt" role="status">
-      <h4>{result.recommend_microwallet ? "MicroWallet opportunity detected" : "No MicroWallet opportunity detected"}</h4>
-      {result.source === "deterministic_fallback" && <p className="fallback-note"><strong>OpenAI is unavailable in this deployment.</strong> Showing the deterministic policy fallback so the demo remains usable.</p>}
+      <h4>{result.recommend_microwallet ? "MicroWallet is a good fit" : "MicroWallet is not needed for this pattern"}</h4>
       <p>{result.reason}</p>
-      <p>Matching low-value transactions: {result.matching_transactions}</p>
-      <p>Matching spend: {money(result.evidence.matching_spend)}</p>
-      <p>Recommended top-up: {money(result.recommended_topup)} (suggestion only)</p>
-      {result.evidence.topup_bounds && <p>Deterministic allowed range: {money(result.evidence.topup_bounds.min)}–{money(result.evidence.topup_bounds.max)}</p>}
-      <strong>Advice only — no payment, top-up, transfer, ledger entry, or balance change was executed.</strong>
+      <p><strong>{result.matching_transactions} low-value purchases</strong> were detected, totaling <strong>{money(result.evidence.matching_spend)}</strong>.</p>
+      {result.recommend_microwallet && <p>A prefunded wallet can let these small purchases settle internally instead of creating a separate external payment for each one.</p>}
+      {result.source === "deterministic_fallback" && <p className="fallback-note">AI analysis is temporarily unavailable. A rule-based continuity result is shown instead.</p>}
+      <p><strong>No money moved in this step.</strong> This is an analysis only.</p>
     </div>}
   </section>;
 }
