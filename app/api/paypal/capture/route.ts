@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { FUNDING_AMOUNT, FUNDING_CURRENCY, orders, paypalRequest } from "@/app/lib/paypal";
-import { readFallbackState, recordFallbackFunding, writeFallbackState } from "@/app/lib/demo-wallet-fallback";
+import { BUYER_ID } from "@/app/lib/demo-wallet-fallback";
 
 export const runtime = "nodejs";
 
@@ -9,13 +9,29 @@ async function recordFunding(orderId: string, captureId: string) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return false;
   try {
+    const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
     const response = await fetch(`${url}/rest/v1/rpc/record_paypal_funding`, {
       method: "POST",
-      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ p_order_id: orderId, p_capture_id: captureId, p_amount_minor: 500, p_currency: FUNDING_CURRENCY }),
       cache: "no-store",
     });
-    return response.ok;
+    if (!response.ok) return false;
+
+    const stateResponse = await fetch(`${url}/rest/v1/rpc/micro_wallet_demo_state`, {
+      method: "POST",
+      headers,
+      body: "{}",
+      cache: "no-store",
+    });
+    if (!stateResponse.ok) return false;
+    const state = await stateResponse.json();
+    return Array.isArray(state?.fundings) && state.fundings.some((funding: Record<string, unknown>) =>
+      funding.orderId === orderId && funding.captureId === captureId &&
+      funding.amountMinor === 500 && funding.currency === FUNDING_CURRENCY
+    ) && Array.isArray(state?.wallets) && state.wallets.some((wallet: Record<string, unknown>) =>
+      wallet.role === "buyer" && wallet.balanceMinor !== undefined && Number.isSafeInteger(wallet.balanceMinor)
+    );
   } catch {
     return false;
   }
@@ -56,7 +72,6 @@ export async function POST(request: Request) {
           throw new Error("PayPal did not confirm a completed capture.");
         }
         order.capture = { orderId, captureId: completedCapture.id, amount: FUNDING_AMOUNT, currency: FUNDING_CURRENCY, status: "COMPLETED" };
-        await recordFunding(orderId, completedCapture.id);
         return order.capture;
       }
       if (orderDetails.status !== "APPROVED") throw new Error("PayPal order has not been approved.");
@@ -75,20 +90,36 @@ export async function POST(request: Request) {
         throw new Error("PayPal did not confirm a completed capture.");
       }
       order.capture = { orderId, captureId: capture.id, amount: capture.amount.value, currency: capture.amount.currency_code, status: capture.status };
-      await recordFunding(orderId, capture.id);
       return order.capture;
     })();
-    order.capturePromise.catch(() => { order.capturePromise = undefined; order.capture = undefined; });
+    order.capturePromise.catch(() => { order.capturePromise = undefined; });
   }
 
   try {
     const capture = order.capture ?? await order.capturePromise;
     if (!capture) throw new Error("Missing capture");
-    const fallback = recordFallbackFunding(readFallbackState(request), capture.orderId, capture.captureId);
-    const response = NextResponse.json(capture, { headers: { "Cache-Control": "no-store" } });
-    writeFallbackState(response, fallback);
-    return response;
+    if (!(await recordFunding(capture.orderId, capture.captureId))) {
+      return NextResponse.json({
+        status: "CAPTURED_CREDIT_PENDING",
+        orderId: capture.orderId,
+        captureId: capture.captureId,
+        amount: capture.amount,
+        currency: capture.currency,
+        message: "PayPal capture completed; wallet credit is not yet verified. Retry this request to reconcile."
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    }
+    return NextResponse.json(capture, { headers: { "Cache-Control": "no-store" } });
   } catch {
+    if (order.capture) {
+      return NextResponse.json({
+        status: "CAPTURED_CREDIT_PENDING",
+        orderId: order.capture.orderId,
+        captureId: order.capture.captureId,
+        amount: order.capture.amount,
+        currency: order.capture.currency,
+        message: "PayPal capture completed; wallet credit is not yet verified. Retry this request to reconcile."
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    }
     return NextResponse.json({ error: "PayPal has not confirmed a completed capture. No successful funding is reported." }, { status: 502 });
   }
 }
