@@ -1,12 +1,21 @@
-create table public.micro_wallet_paypal_fundings (
+create table if not exists public.micro_wallet_paypal_fundings (
   id uuid primary key default gen_random_uuid(),
   order_id text not null unique,
   capture_id text not null unique,
   wallet_id uuid not null references public.micro_wallets(id),
   amount_minor bigint not null check (amount_minor > 0),
   currency text not null check (currency = 'USD'),
+  buyer_balance_after bigint not null check (buyer_balance_after >= 0),
   created_at timestamptz not null default now()
 );
+
+alter table public.micro_wallet_paypal_fundings
+  add column if not exists wallet_id uuid references public.micro_wallets(id);
+update public.micro_wallet_paypal_fundings
+   set wallet_id = '00000000-0000-4000-8000-000000000001'
+ where wallet_id is null;
+alter table public.micro_wallet_paypal_fundings
+  alter column wallet_id set not null;
 
 create trigger micro_wallet_paypal_fundings_immutable
 before update or delete on public.micro_wallet_paypal_fundings
@@ -57,8 +66,9 @@ begin
 
   stamp := now();
   insert into public.micro_wallet_paypal_fundings
-    (order_id, capture_id, wallet_id, amount_minor, currency, created_at)
-  values (p_order_id, p_capture_id, buyer.id, p_amount_minor, p_currency, stamp);
+    (order_id, capture_id, wallet_id, amount_minor, currency, buyer_balance_after, created_at)
+  values (p_order_id, p_capture_id, buyer.id, p_amount_minor, p_currency,
+          buyer.balance_minor + p_amount_minor, stamp);
   update public.micro_wallets
      set balance_minor = balance_minor + p_amount_minor, updated_at = stamp
    where id = buyer.id;
