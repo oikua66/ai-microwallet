@@ -1,13 +1,13 @@
-create table if not exists public.micro_wallet_paypal_fundings (
-  id uuid primary key default gen_random_uuid(),
-  order_id text not null unique,
-  capture_id text not null unique,
-  wallet_id uuid not null references public.micro_wallets(id),
-  amount_minor bigint not null check (amount_minor > 0),
-  currency text not null check (currency = 'USD'),
-  buyer_balance_after bigint not null check (buyer_balance_after >= 0),
-  created_at timestamptz not null default now()
-);
+alter table public.micro_wallet_paypal_fundings
+  add column if not exists id uuid default gen_random_uuid();
+update public.micro_wallet_paypal_fundings
+   set id = gen_random_uuid()
+ where id is null;
+alter table public.micro_wallet_paypal_fundings
+  alter column id set default gen_random_uuid(),
+  alter column id set not null;
+create unique index if not exists micro_wallet_paypal_fundings_id_key
+  on public.micro_wallet_paypal_fundings (id);
 
 alter table public.micro_wallet_paypal_fundings
   add column if not exists wallet_id uuid references public.micro_wallets(id);
