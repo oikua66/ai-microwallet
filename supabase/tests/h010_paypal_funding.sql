@@ -12,8 +12,10 @@ declare
   state_result jsonb;
   buyer_balance bigint;
   funding_count bigint;
+  funding_count_before bigint;
 begin
   update public.micro_wallets set balance_minor = 420 where id = buyer_id;
+  select count(*) into funding_count_before from public.micro_wallet_paypal_fundings;
 
   result_first := public.record_paypal_funding(order_key, capture_key, 500, 'USD');
   result_retry := public.record_paypal_funding(order_key, capture_key, 500, 'USD');
@@ -24,7 +26,8 @@ begin
      or (result_first->>'duplicate')::boolean is distinct from false
      or result_retry->>'buyerBalanceAfter' <> '920'
      or (result_retry->>'duplicate')::boolean is distinct from true
-     or buyer_balance <> 920 or funding_count <> 1
+     or buyer_balance <> 920 or funding_count <> funding_count_before + 1
+     or state_result->'summary'->>'real_paypal_payment_count' <> (funding_count_before + 1)::text
      or not exists (
        select 1 from jsonb_array_elements(state_result->'wallets') as item(value)
        where value->>'role' = 'buyer' and value->>'balanceMinor' = '920'
