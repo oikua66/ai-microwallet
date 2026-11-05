@@ -36,7 +36,7 @@ async function recordFunding(orderId: string, captureId: string) {
       funding.amountMinor === 500 && funding.currency === FUNDING_CURRENCY &&
       funding.buyerBalanceAfter === recorded.buyerBalanceAfter
     ) && Array.isArray(state?.wallets) && state.wallets.some((wallet: Record<string, unknown>) =>
-      wallet.role === "buyer" && Number.isSafeInteger(wallet.balanceMinor) && wallet.balanceMinor >= 0
+      wallet.role === "buyer" && typeof wallet.balanceMinor === "number" && Number.isSafeInteger(wallet.balanceMinor) && wallet.balanceMinor >= 0
     );
   } catch {
     return false;
