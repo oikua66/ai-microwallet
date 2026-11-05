@@ -41,7 +41,7 @@ begin
     perform public.record_paypal_funding(order_key || '-invalid', capture_key || '-invalid', 499, 'USD');
     raise exception 'Expected invalid funding amount rejection';
   exception when others then
-    if sqlerrm <> 'Funding amount and currency do not match expected PayPal funding' then raise; end if;
+    if sqlerrm <> 'Unexpected PayPal funding amount' then raise; end if;
   end;
   select balance_minor into buyer_balance from public.micro_wallets where id = buyer_id;
   select count(*) into funding_count from public.micro_wallet_paypal_fundings where order_id = order_key;
