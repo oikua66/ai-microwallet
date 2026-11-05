@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { BUYER_ID, SELLER_ID, readFallbackState, settleFallback, writeFallbackState } from "@/app/lib/demo-wallet-fallback";
+import { BUYER_ID, SELLER_ID } from "@/app/lib/demo-wallet-fallback";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,10 +36,10 @@ export async function GET(request: Request) {
     }
     return NextResponse.json(state, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    const state = readFallbackState(request);
-    const response = NextResponse.json(state, { headers: { "Cache-Control": "no-store", "X-MicroWallet-Storage": "browser-fallback" } });
-    writeFallbackState(response, state);
-    return response;
+    return NextResponse.json({ error: "Wallet storage is unavailable; durable wallet state could not be loaded." }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store" },
+    });
   }
 }
 
@@ -74,14 +74,8 @@ export async function POST(request: Request) {
     }
   }
 
-  try {
-    const current = readFallbackState(request);
-    const { state, receipt } = settleFallback(current, amountMinor as number, idempotencyKey as string);
-    const response = NextResponse.json(receipt, { headers: { "Cache-Control": "no-store", "X-MicroWallet-Storage": "browser-fallback" } });
-    writeFallbackState(response, state);
-    return response;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Settlement could not be completed.";
-    return NextResponse.json({ error: message.includes("Insufficient balance") ? "Insufficient balance" : "Settlement could not be completed. No balance or ledger change was committed." }, { status: message.includes("Insufficient balance") ? 409 : 503 });
-  }
+  return NextResponse.json({ error: "Wallet storage is unavailable; no settlement was committed." }, {
+    status: 503,
+    headers: { "Cache-Control": "no-store" },
+  });
 }
