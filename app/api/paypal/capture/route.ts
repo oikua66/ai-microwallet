@@ -17,6 +17,11 @@ async function recordFunding(orderId: string, captureId: string) {
       cache: "no-store",
     });
     if (!response.ok) return false;
+    const recorded = await response.json();
+    if (recorded?.orderId !== orderId || recorded?.captureId !== captureId ||
+        recorded?.amountMinor !== 500 || recorded?.currency !== FUNDING_CURRENCY ||
+        !Number.isSafeInteger(recorded?.buyerBalanceAfter) || recorded.buyerBalanceAfter < 500 ||
+        typeof recorded?.duplicate !== "boolean") return false;
 
     const stateResponse = await fetch(`${url}/rest/v1/rpc/micro_wallet_demo_state`, {
       method: "POST",
@@ -28,9 +33,10 @@ async function recordFunding(orderId: string, captureId: string) {
     const state = await stateResponse.json();
     return Array.isArray(state?.fundings) && state.fundings.some((funding: Record<string, unknown>) =>
       funding.orderId === orderId && funding.captureId === captureId &&
-      funding.amountMinor === 500 && funding.currency === FUNDING_CURRENCY
+      funding.amountMinor === 500 && funding.currency === FUNDING_CURRENCY &&
+      funding.buyerBalanceAfter === recorded.buyerBalanceAfter
     ) && Array.isArray(state?.wallets) && state.wallets.some((wallet: Record<string, unknown>) =>
-      wallet.role === "buyer" && wallet.balanceMinor !== undefined && Number.isSafeInteger(wallet.balanceMinor)
+      wallet.role === "buyer" && Number.isSafeInteger(wallet.balanceMinor)
     );
   } catch {
     return false;
