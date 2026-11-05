@@ -1,4 +1,4 @@
--- Run after the H-010 migration against a disposable/test database.
+-- Run after all sorted migrations, including H-010, against a disposable/test database.
 -- The outer transaction rolls back the test wallet changes and funding rows.
 begin;
 
