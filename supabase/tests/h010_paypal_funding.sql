@@ -26,7 +26,7 @@ begin
      or (result_first->>'duplicate')::boolean is distinct from false
      or result_retry->>'buyerBalanceAfter' <> '920'
      or (result_retry->>'duplicate')::boolean is distinct from true
-     or buyer_balance <> 920 or funding_count <> funding_count_before + 1
+     or buyer_balance <> 920 or funding_count <> 1
      or state_result->'summary'->>'real_paypal_payment_count' <> (funding_count_before + 1)::text
      or not exists (
        select 1 from jsonb_array_elements(state_result->'wallets') as item(value)
